@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 4.12.2, 2021-04-08T23:39:29. -->
+<!-- Written by QtCreator 4.12.2, 2021-04-07T22:40:00. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -55,14 +55,6 @@
  <data>
   <variable>ProjectExplorer.Project.PluginSettings</variable>
   <valuemap type="QVariantMap">
-   <valuemap type="QVariantMap" key="AutoTest.ActiveFrameworks">
-    <value type="bool" key="AutoTest.Framework.Boost">true</value>
-    <value type="bool" key="AutoTest.Framework.GTest">true</value>
-    <value type="bool" key="AutoTest.Framework.QtQuickTest">true</value>
-    <value type="bool" key="AutoTest.Framework.QtTest">true</value>
-   </valuemap>
-   <value type="int" key="AutoTest.RunAfterBuild">0</value>
-   <value type="bool" key="AutoTest.UseGlobal">true</value>
    <valuelist type="QVariantList" key="ClangCodeModel.CustomCommandLineKey">
     <value type="QString">-fno-delayed-template-parsing</value>
    </valuelist>
@@ -316,9 +308,8 @@
     </valuelist>
     <value type="int" key="PE.EnvironmentAspect.Base">2</value>
     <valuelist type="QVariantList" key="PE.EnvironmentAspect.Changes"/>
-    <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName">prototype2</value>
-    <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">Qt4ProjectManager.Qt4RunConfiguration:D:/yuyue/University/SoftwareEngineering/Air-Conditioning-BUPT/prototype_2.0/prototype.pro</value>
-    <value type="QString" key="ProjectExplorer.RunConfiguration.BuildKey">D:/yuyue/University/SoftwareEngineering/Air-Conditioning-BUPT/prototype_2.0/prototype.pro</value>
+    <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">Qt4ProjectManager.Qt4RunConfiguration:D:/yuyue/University/SoftwareEngineering/Air-Conditioning-BUPT/prototype/prototype.pro</value>
+    <value type="QString" key="ProjectExplorer.RunConfiguration.BuildKey">D:/yuyue/University/SoftwareEngineering/Air-Conditioning-BUPT/prototype/prototype.pro</value>
     <value type="QString" key="RunConfiguration.Arguments"></value>
     <value type="bool" key="RunConfiguration.Arguments.multi">false</value>
     <value type="QString" key="RunConfiguration.OverrideDebuggerStartup"></value>
