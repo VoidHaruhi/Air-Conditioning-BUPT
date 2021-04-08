@@ -1,4 +1,4 @@
-#include "WebSocketClient.h"
+﻿#include "WebSocketClient.h"
 #include "ui_WebSocketClient.h"
 
 #include <QHostAddress>
@@ -12,11 +12,11 @@ WebSocketClient::WebSocketClient(QWidget *parent) :
     ui->setupUi(this);
 
     //构造：QWebSocket(const QString &origin = QString(), QWebSocketProtocol::Version version = QWebSocketProtocol::VersionLatest, QObject *parent = nullptr)
-    //使用给定的源，要使用的协议版本和parent创建一个新的QWebSocket 。
+    //使用给定的源，要使用的协议版本和parent创建一个新的QWebSocket 。*/
     client=new QWebSocket;
     client->setParent(this);
 
-    //连接服务端
+    //连接服务端*/
     connect(ui->btnOpen,&QPushButton::clicked,[this](){
         if(ui->btnOpen->text()!="Open"){
             client->close();
@@ -24,7 +24,7 @@ WebSocketClient::WebSocketClient(QWidget *parent) :
             client->open(QUrl(ui->editUrl->text()));
         }
     });
-    //连接结果
+    //连接结果*/
     ui->btnSend->setEnabled(false);
     connect(client,&QWebSocket::connected,[this](){
         ui->btnSend->setEnabled(true);
@@ -39,7 +39,7 @@ WebSocketClient::WebSocketClient(QWidget *parent) :
         ui->btnOpen->setText("Open");
         qDebug()<<"disconnected";
     });
-    //发送数据
+    //发送数据*/
     connect(ui->btnSend,&QPushButton::clicked,[this](){
         if(!ui->editSend->toPlainText().isEmpty()){
             QString msg=ui->editSend->toPlainText();
@@ -54,7 +54,7 @@ WebSocketClient::WebSocketClient(QWidget *parent) :
         }
 
     });
-    //接收数据
+    //接收数据*/
     connect(client,&QWebSocket::textMessageReceived,[this](const QString &msg){
         ui->editRecv->append(msg);
     });
@@ -62,7 +62,7 @@ WebSocketClient::WebSocketClient(QWidget *parent) :
 
 WebSocketClient::~WebSocketClient()
 {
-    //结束的时候没关会异常
+    //结束的时候没关会异常*/
     client->close();
     delete ui;
 }
