@@ -39,24 +39,24 @@
     <string>正在运行的从控机</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="Cost">
+  <widget class="QPushButton" name="simCost_btn">
    <property name="geometry">
     <rect>
-     <x>1040</x>
+     <x>1030</x>
      <y>700</y>
-     <width>141</width>
-     <height>61</height>
+     <width>71</width>
+     <height>31</height>
     </rect>
    </property>
    <property name="text">
-    <string>查询费用</string>
+    <string>简单费用</string>
    </property>
   </widget>
   <widget class="QPushButton" name="sendMsg_btn">
    <property name="geometry">
     <rect>
-     <x>1040</x>
-     <y>770</y>
+     <x>1020</x>
+     <y>840</y>
      <width>141</width>
      <height>41</height>
     </rect>
@@ -489,6 +489,60 @@
      </item>
     </layout>
    </widget>
+  </widget>
+  <widget class="QPushButton" name="detailCost_btn">
+   <property name="geometry">
+    <rect>
+     <x>950</x>
+     <y>700</y>
+     <width>71</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>详细费用</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="cost_roomId_lEdit">
+   <property name="geometry">
+    <rect>
+     <x>1010</x>
+     <y>660</y>
+     <width>150</width>
+     <height>30</height>
+    </rect>
+   </property>
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <property name="minimumSize">
+    <size>
+     <width>150</width>
+     <height>30</height>
+    </size>
+   </property>
+   <property name="maximumSize">
+    <size>
+     <width>150</width>
+     <height>30</height>
+    </size>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="report_btn">
+   <property name="geometry">
+    <rect>
+     <x>1120</x>
+     <y>700</y>
+     <width>71</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>报表</string>
+   </property>
   </widget>
  </widget>
  <resources/>

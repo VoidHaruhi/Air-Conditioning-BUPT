@@ -24,6 +24,9 @@ void Login::IniRegi()
     ui->password_edit->setEchoMode(QLineEdit::Password);
     ui->password_edit->setPlaceholderText(tr("请输入密码"));
     ui->name_edit->setPlaceholderText(tr("请输入用户名"));
+    ui->login_btn->setDisabled(true);
+    ui->name_edit->setDisabled(true);
+    ui->password_edit->setDisabled(true);
 
 //    //登录
 //    connect(ui->login_btn, &QPushButton::clicked, [=](){
@@ -37,11 +40,12 @@ void Login::connectSrv()
     QUrl url = QUrl(path);
 
     client->open(url);
+    connect(client,SIGNAL(connected()),this,SLOT(so_connected()));
 }
 void Login::Iniconnect()
 {
      connect(ui->login_btn, SIGNAL(clicked()), this, SLOT(Login_Pressed()));
-     connect(ui->signup_btn, SIGNAL(clicked()), this, SLOT(Signup_Pressed()));
+//     connect(ui->signup_btn, SIGNAL(clicked()), this, SLOT(Signup_Pressed()));
      client = new QWebSocket();
      connect(client, &QWebSocket::connected, this, &Login::Connected);
      connect(client, &QWebSocket::textMessageReceived, this,  &Login::recv_msg);
@@ -49,8 +53,8 @@ void Login::Iniconnect()
 }
 void Login::sendloginpak(QString name,QString pass)
 {
-    name = QString::fromStdString(MD5(name.toStdString()).toString());
-    pass = QString::fromStdString(MD5(pass.toStdString()).toString());
+//    name = QString::fromStdString(MD5(name.toStdString()).toString());
+//    pass = QString::fromStdString(MD5(pass.toStdString()).toString());
     QJsonObject json;
     refid = generate_refId();
     json[REFID] = refid;
@@ -102,9 +106,10 @@ void Login::recv_msg(const QString& msg)
                 else if(json[HANDLER]=="/server/retRole"){
                         QJsonObject data  = json[DATA].toObject();
                         QString role = data[ROLE].toString();
-                        QString token = json[TOKEN].toString();
+                        QString token = data[TOKEN].toString();
                         if(role == "manager")
                         {
+                            QMessageBox::information(this, tr("提示"), tr("登陆成功！"));
                             Widget *si = new Widget(token,nullptr,1);
                             this->close();
                             si->show();
@@ -130,6 +135,12 @@ void Login::keyPressEvent(QKeyEvent *event)
           Login_Pressed();
            return;
         }
+}
+void Login::so_connected()
+{
+    ui->login_btn->setEnabled(true);
+    ui->name_edit->setEnabled(true);
+    ui->password_edit->setEnabled(true);
 }
 Login::~Login()
 {

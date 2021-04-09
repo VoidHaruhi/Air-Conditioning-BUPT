@@ -24,22 +24,27 @@ public:
     void openRoom(QString roomId,QString temp);
     void seeRoomInfo(QString roomId);
     void controlRoom(QString roomId,QString temp,QString power,QString wind);
-    void getCost(QString roomId="all",bool detail=false,bool detailFIle=false);
+    void getCost(QString roomId="All",bool detail=false,bool detailFIle=false);
     void sendMSG(QString roomId,QString msg);
+    void getReport();
 
     void recvMsg(const QString& msg);
     void connectSrv();
     void Iniconnect();
     void IniCtrlroom();
     void IniOpenroom();
+    void IniCost();
     //接受处理特定的包
     void dealRoomlist(QJsonObject json);
-    void dealFeeList(QJsonObject json);
+    void dealdetailFeeList(QJsonObject json);
     void dealError(QJsonObject json);
+    void dealsimFee(QJsonObject json);
     void dealConfirm(QJsonObject json);
     void dealRoomInfo(QJsonObject json);
+    void dealReport(QJsonObject json);
     void IniWidget();
 private slots:
+    void so_connected();
     void on_allroomInfo_btn_clicked();
 
     void on_roomInfo_btn_clicked();
@@ -60,13 +65,20 @@ private slots:
 
     void on_Cost_clicked();
 
+    void on_simCost_btn_clicked();
+
+    void on_detailCost_btn_clicked();
+
+    void on_report_btn_clicked();
+
 private:
     QStringList sl ={
         "/server/retRoomList",
-        "/server/retFeeList",
+        "/server/retDetailCost",
         "/server/retSimpleCost",
         "/server/roomInfo",
         "/server/comfirm",
+        "/server/retReport",
         "/server/error"
     };
     QWebSocket* client;

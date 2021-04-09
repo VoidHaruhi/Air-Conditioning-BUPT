@@ -14,6 +14,7 @@
 #include<QJsonDocument>
 #include<QTime>
 #include<QKeyEvent>
+#include<QTimer>
 #include<QJsonArray>
 #include<QWebSocket>
 #include<QTableWidget>
@@ -41,10 +42,12 @@ using namespace std;
 #define PASSWORD "password"
 #define SRVERADDR "127.0.0.1"
 #define SRVERPORT "12345"
-#define LEN_ROOMINFO 5
+#define LEN_ROOMINFO 6
 #define LEN_ROOMLIST 2
+#define LEN_DETAILCOST 6
+#define LEN_SIMCOST 4
 QString generate_refId();
-
+void setAddr();
 
 extern QStringList refIdlsit;
 
