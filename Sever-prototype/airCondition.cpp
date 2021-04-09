@@ -25,7 +25,7 @@ AirCondition::~AirCondition()
 
 void AirCondition::initial(int id, int tmp)
 {
-    idle=false;
+    idle=true;
     roomId = id;
     nowTmp = tmp;
 }
@@ -34,6 +34,7 @@ void AirCondition::open(QString systemToken,int tmp){
     token=systemToken;
     openTime = current_time.hour() * 3600 + current_time.minute() * 60 + current_time.second();
     defaultTmp=tmp;
+    idle=false;
 
 }
 
