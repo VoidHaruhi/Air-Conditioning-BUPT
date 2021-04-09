@@ -18,7 +18,7 @@
     {qDebug()<<"Send Error!";}\
     qDebug()<<_msg;}
 #define WRONG_TOKEN "wrong token"
-#define WRONG_ROOMID "wrong roonId"
+#define WRONG_ROOMID "wrong roomId"
 #define GEN_ERROR(ret,tok) {ret.insert("handler","/server/error");ret.insert("msg",tok);}
 using string=std::string;
 namespace Ui {
@@ -41,6 +41,8 @@ public:
     void getRoomList(QWebSocket *socket, QJsonObject recvJson);
     void openRoom(QWebSocket *socket,QJsonObject recvJson);
     void seeRoomInfo(QWebSocket *socket,QJsonObject recvJson);
+
+
     void initRoom(QWebSocket *socket,QJsonObject recvJson);
     void setAc(QWebSocket *socket,QJsonObject recvJson);
     void openAc(QWebSocket *socket,QJsonObject recvJson);

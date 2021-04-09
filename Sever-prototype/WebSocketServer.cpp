@@ -114,12 +114,17 @@ void WebSocketServer::onNewConnection(){
     });
 }
 QString WebSocketServer::generateToken(){
-    QString salt=QString(int(clock()))+QString(qrand());
-    return QCryptographicHash::hash(salt.toLatin1(),QCryptographicHash::Md5).toHex();
+    QString salt=QTime::currentTime().toString("zzz")+QString(QRandomGenerator::global()->bounded(100000));
+    QString token=QCryptographicHash::hash(salt.toLatin1(),QCryptographicHash::Md5).toHex();
+    qDebug()<<"Token generated"<<token<<salt;
+    return token;
 }
 bool WebSocketServer::checkToken(QString token, QString role){
-    if(tokenMap.count(token)==0||tokenMap[token]!=role){
-        qDebug()<<"Wrong token "<<token;
+    if(tokenMap.count(token)==0){
+        qDebug()<<"Wrong token "<<token << role;
+        return false;
+    }else if(tokenMap[token]!=role){
+        qDebug()<<"Wrong role "<<token << role;
         return false;
     }
     return true;
@@ -161,6 +166,8 @@ void WebSocketServer::packageAnalyse(QWebSocket *socket, QJsonObject recvJson)
             setAc(socket,recvJson);
         }else if(request[2]=="updataStatus"){
             updateAc(socket,recvJson);
+        }else if(request[2]=="confirm"){
+
         }else{
             qDebug()<<"request error";
         }
@@ -191,8 +198,10 @@ void WebSocketServer::controlRoom(QWebSocket *socket, QJsonObject recvJson){
     QJsonObject req;
     req.insert("refId",recvJson["refId"].toString());
     req.insert("handler","/server/setRoom");
-    req.insert("token",token);
-    req.insert("data",recvJson["data"].toObject());
+    QJsonObject dataRet;
+    dataRet.insert("token",token);
+    dataRet.insert("defaultTmp",data["defaultTmp"].toInt());
+    req.insert("data",dataRet);
     QWebSocket *socketR=sockMap[data["roomId"].toInt()];
     SEND_MESSAGE(socketR,req);
 }
@@ -277,7 +286,7 @@ void WebSocketServer::openRoom(QWebSocket *socket, QJsonObject recvJson){
     int id=data["roomId"].toInt();
     int defaultTmp=data["defaultTmp"].toInt();
     int check=findRoom(id);
-    if(!check){
+    if(check==-1){
         qDebug()<<"Wrong id";
         GEN_ERROR(ret,WRONG_ROOMID);
         SEND_MESSAGE(socket,ret);
@@ -381,9 +390,9 @@ void WebSocketServer::initRoom(QWebSocket *socket, QJsonObject recvJson)
         //test
         QString token=generateToken();
         acTmp.token=token;
-        tokenMap[token]=QString(acTmp.roomId);
+        tokenMap[token]=QString("%1").arg(acTmp.roomId);
         // 将空调加入列表*/
-        airConditioners.push_back(acTmp);
+        airConditioners.append(acTmp);
         qDebug()<<"Room:"<<roomId<<" is connected,"<<"initTmp is "<<initTmp;
         // 加入sockMap
         sockMap[roomId] = socket;
@@ -391,10 +400,10 @@ void WebSocketServer::initRoom(QWebSocket *socket, QJsonObject recvJson)
         ret.insert("handler","/server/confirm");
         SEND_MESSAGE(socket,ret);
         // 更新房间客户端信息表*/
-        QString q = "INSERT INTO ip_info values(";
-        QString ip = socket->peerAddress().toString();
-        q += "'"+ip +"'"+",'room',"+"'"+QString(roomId)+"'"+");";
-        db.queryInsert(q);
+//        QString q = "INSERT INTO ip_info values(";
+//        QString ip = socket->peerAddress().toString();
+//        q += "'"+ip +"'"+",'room',"+"'"+QString(roomId)+"'"+");";
+//        db.queryInsert(q);
 
     }
     else{   // 回复错误信息*/
@@ -486,9 +495,9 @@ void WebSocketServer::openAc(QWebSocket *socket, QJsonObject recvJson)
         SEND_MESSAGE(socket,ret);
         // 更新数据库*/
         if(power==0){
-            QString q = "INSERT INTO detailed_money values (";
-            q += QString(ac->roomId)+","+token+","+QString(ac->lastUpdateTime)+","+QString("%1").arg(ac->totalFee) + ");";
-            db.queryInsert(q);
+//            QString q = "INSERT INTO detailed_money values (";
+//            q += QString(ac->roomId)+","+token+","+QString(ac->lastUpdateTime)+","+QString("%1").arg(ac->totalFee) + ");";
+//            db.queryInsert(q);
         }
     }
 }
@@ -535,13 +544,13 @@ void WebSocketServer::updateAc(QWebSocket *socket, QJsonObject recvJson)
         SEND_MESSAGE(socket,ret);
 
         // 更新详细消费表*/
-        QString q = "INSERT INTO detailed_money values (";
-        q += QString(ac->roomId)+","+token+","+QString(ac->lastUpdateTime)+","+QString("%1").arg(ac->totalFee) + ");";
-        db.queryInsert(q);
-        // 更新房间状态表*/
-        q = "INSERT INTO room_status values (";
-        q += QString(ac->roomId)+","+QString(ac->wind)+","+QString("%1").arg(ac->nowTmp)+",";
-        q += QString(beginTime)+","+QString(ac->lastUpdateTime)+");";
-        db.queryInsert(q);
+//        QString q = "INSERT INTO detailed_money values (";
+//        q += QString(ac->roomId)+","+token+","+QString(ac->lastUpdateTime)+","+QString("%1").arg(ac->totalFee) + ");";
+//        db.queryInsert(q);
+//        // 更新房间状态表*/
+//        q = "INSERT INTO room_status values (";
+//        q += QString(ac->roomId)+","+QString(ac->wind)+","+QString("%1").arg(ac->nowTmp)+",";
+//        q += QString(beginTime)+","+QString(ac->lastUpdateTime)+");";
+//        db.queryInsert(q);
     }
 }
