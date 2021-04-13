@@ -22,8 +22,8 @@ void Login::IniRegi()
 //    palette.setBrush(QPalette::Background, QBrush(QPixmap(":res/regi.jpg")));
 //    this->setPalette(palette);
     ui->password_edit->setEchoMode(QLineEdit::Password);
-    ui->password_edit->setPlaceholderText(tr("请输入密码"));
-    ui->name_edit->setPlaceholderText(tr("请输入用户名"));
+    ui->password_edit->setPlaceholderText("请输入密码");
+    ui->name_edit->setPlaceholderText("请输入用户名");
     ui->login_btn->setDisabled(true);
     ui->name_edit->setDisabled(true);
     ui->password_edit->setDisabled(true);
@@ -101,7 +101,7 @@ void Login::recv_msg(const QString& msg)
                 refIdlsit.removeOne(json[REFID].toString());
                 if(json[HANDLER]=="/server/error"){
                     if(json[MESSAGE]== "wrong password")
-                        QMessageBox::warning(this, tr("错误"), tr("密码错误"));
+                        QMessageBox::warning(this, "错误", "密码错误");
                 }
                 else if(json[HANDLER]=="/server/retRole"){
                         QJsonObject data  = json[DATA].toObject();
@@ -109,7 +109,7 @@ void Login::recv_msg(const QString& msg)
                         QString token = data[TOKEN].toString();
                         if(role == "manager")
                         {
-                            QMessageBox::information(this, tr("提示"), tr("登陆成功！"));
+                            QMessageBox::information(this, "提示", "登陆成功！");
                             Widget *si = new Widget(token,nullptr,1);
                             this->close();
                             si->show();

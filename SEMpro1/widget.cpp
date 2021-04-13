@@ -26,8 +26,8 @@ void Widget::IniOpenroom()
 {
     ui->openroom_tartemp_lEdit->clear();
     ui->openroom_roomId_lEdit->clear();
-    ui->openroom_roomId_lEdit->setPlaceholderText(tr("请输入房间号"));
-    ui->openroom_tartemp_lEdit->setPlaceholderText(tr("请输入目标温度"));
+    ui->openroom_roomId_lEdit->setPlaceholderText("请输入房间号");
+    ui->openroom_tartemp_lEdit->setPlaceholderText("请输入目标温度");
 }
 void Widget::IniCtrlroom()
 {
@@ -41,7 +41,7 @@ void Widget::IniCtrlroom()
     ui->ctrlroom_poweron_rbtn->setDisabled(true);
     ui->ctrlroom_poweroff_rbtn->setDisabled(true);
     ui->ctrlroom_roomId_ledit->clear();
-    ui->ctrlroom_roomId_ledit->setPlaceholderText(tr("房间号默认为all"));
+    ui->ctrlroom_roomId_ledit->setPlaceholderText("房间号默认为all");
     ui->checkBox->setChecked(false);
     ui->checkBox_2->setChecked(false);
     ui->checkBox_3->setChecked(false);
@@ -66,7 +66,7 @@ void Widget::dealRoomlist(QJsonObject json)
     ui->Tablewidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
     ui->Tablewidget->setRowCount(cnt);
     ui->Tablewidget->setColumnCount(data_len);
-    ui->Tablewidget->setHorizontalHeaderLabels({tr("房间号"), tr("空调状态")});
+    ui->Tablewidget->setHorizontalHeaderLabels({"房间号", "空调状态"});
     ui->Tablewidget->verticalHeader()->hide();
    // ui->Tablewidget->horizontalHeader()->setSectionResizeMode( QHeaderView::ResizeToContents);
     ui->Tablewidget->horizontalHeader()->setSectionResizeMode( QHeaderView::Stretch);
@@ -93,7 +93,7 @@ void Widget::dealConfirm(QJsonObject json)
     if(refIdlsit.contains(refId))
         refIdlsit.removeOne(json[REFID].toString());
 
-    QMessageBox::information(this, tr("提示"), tr("控制操作完成"));
+    QMessageBox::information(this, "提示", "控制操作完成");
 }
 void Widget::dealdetailFeeList(QJsonObject json)
 {
@@ -116,7 +116,7 @@ void Widget::dealdetailFeeList(QJsonObject json)
     ui->Tablewidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
     ui->Tablewidget->setRowCount(cnt);
     ui->Tablewidget->setColumnCount(data_len);
-    ui->Tablewidget->setHorizontalHeaderLabels({tr("房间号"), tr("运行时间"), tr("当前温度"),tr("目标温度"),tr("当前风速"),tr("收费标准")});
+    ui->Tablewidget->setHorizontalHeaderLabels({"房间号", "运行时间", "当前温度","目标温度","当前风速","收费标准"});
     ui->Tablewidget->verticalHeader()->hide();
    // ui->Tablewidget->horizontalHeader()->setSectionResizeMode( QHeaderView::ResizeToContents);
     ui->Tablewidget->horizontalHeader()->setSectionResizeMode( QHeaderView::Stretch);
@@ -164,7 +164,7 @@ void Widget::dealRoomInfo(QJsonObject json)
     ui->Tablewidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
     ui->Tablewidget->setRowCount(cnt);
     ui->Tablewidget->setColumnCount(data_len);
-    ui->Tablewidget->setHorizontalHeaderLabels({tr("房间号"), tr("空调电源"),tr("目标温度"),tr("目标温度"),tr("当前风速")});
+    ui->Tablewidget->setHorizontalHeaderLabels({"房间号", "空调电源","目标温度","目标温度","当前风速"});
     ui->Tablewidget->verticalHeader()->hide();
    // ui->Tablewidget->horizontalHeader()->setSectionResizeMode( QHeaderView::ResizeToContents);
     ui->Tablewidget->horizontalHeader()->setSectionResizeMode( QHeaderView::Stretch);
@@ -201,7 +201,7 @@ void Widget::dealsimFee(QJsonObject json){
     ui->Tablewidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
     ui->Tablewidget->setRowCount(1);
     ui->Tablewidget->setColumnCount(data_len);
-    ui->Tablewidget->setHorizontalHeaderLabels({tr("roomId"), tr("totalFee"), tr("checkinTime"),tr("checkoutTime")});
+    ui->Tablewidget->setHorizontalHeaderLabels({"roomId", "totalFee", "checkinTime","checkoutTime"});
     ui->Tablewidget->verticalHeader()->hide();
    // ui->Tablewidget->horizontalHeader()->setSectionResizeMode( QHeaderView::ResizeToContents);
     ui->Tablewidget->horizontalHeader()->setSectionResizeMode( QHeaderView::Stretch);
@@ -241,7 +241,7 @@ void Widget::dealReport(QJsonObject json){
     ui->Tablewidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
     ui->Tablewidget->setRowCount(cnt);
     ui->Tablewidget->setColumnCount(data_len);
-    ui->Tablewidget->setHorizontalHeaderLabels({tr("roomId"), tr("powerCost"),tr("moneyCost")});
+    ui->Tablewidget->setHorizontalHeaderLabels({"roomId","powerCost","moneyCost"});
     ui->Tablewidget->verticalHeader()->hide();
    // ui->Tablewidget->horizontalHeader()->setSectionResizeMode( QHeaderView::ResizeToContents);
     ui->Tablewidget->horizontalHeader()->setSectionResizeMode( QHeaderView::Stretch);
@@ -309,7 +309,7 @@ void Widget::recvMsg(const QString& msg)
                 if(json[HANDLER]=="/server/error")
                 {
                     if(json[MESSAGE]== "wrong password")
-                        QMessageBox::warning(this, tr("错误"), tr("密码错误"));
+                        QMessageBox::warning(this, "错误", "密码错误");
                 }
                 else if(json[HANDLER]=="/server/retRole")
                 {
@@ -515,21 +515,21 @@ void Widget::on_openroom_btnbox_accepted()
 
     if(rx.indexIn(temp)!=0)
     {
-        QMessageBox::information(this, tr("提示"), tr("请输入正确的温度"));
+        QMessageBox::information(this, "提示", "请输入正确的温度");
         IniOpenroom();
         return;
     }
     QRegExp rx1("^\\d\\d*$");
     if(rx1.indexIn(id)!=0)
     {
-        QMessageBox::information(this, tr("提示"), tr("请输入正确的房间号"));
+        QMessageBox::information(this, "提示", "请输入正确的房间号");
         IniOpenroom();
         return;
     }
     if(!id.isEmpty() && !temp.isEmpty())
         openRoom(id,temp);
     else{
-        QMessageBox::information(this, tr("提示"), tr("请输入房间号与温度"));
+        QMessageBox::information(this, "提示", "请输入房间号与温度");
     }
     IniOpenroom();
 }
