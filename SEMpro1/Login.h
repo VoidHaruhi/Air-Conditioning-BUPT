@@ -32,6 +32,7 @@ private:
     QString refid="";
 //    QTcpSocket *Client;
 private slots:
+    void so_connected();
     void Login_Pressed();
     void Connected();
     void Signup_Pressed();
