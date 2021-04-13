@@ -23,6 +23,8 @@ public:
     void getAllroom();
     void openRoom(QString roomId,QString temp);
     void seeRoomInfo(QString roomId);
+
+    void closeRoom(QString roomId);
     void controlRoom(QString roomId,QString temp,QString power,QString wind);
     void getCost(QString roomId="All",bool detail=false,bool detailFIle=false);
     void sendMSG(QString roomId,QString msg);
@@ -33,6 +35,7 @@ public:
     void Iniconnect();
     void IniCtrlroom();
     void IniOpenroom();
+    void IniCloseroom();
     void IniCost();
     //接受处理特定的包
     void dealRoomlist(QJsonObject json);
@@ -70,6 +73,10 @@ private slots:
     void on_detailCost_btn_clicked();
 
     void on_report_btn_clicked();
+
+    void on_closeroom_btnbox_accepted();
+
+    void on_closeroom_btnbox_rejected();
 
 private:
     QStringList sl ={

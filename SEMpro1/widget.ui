@@ -55,8 +55,8 @@
   <widget class="QPushButton" name="sendMsg_btn">
    <property name="geometry">
     <rect>
-     <x>1020</x>
-     <y>840</y>
+     <x>1040</x>
+     <y>770</y>
      <width>141</width>
      <height>41</height>
     </rect>
@@ -88,10 +88,10 @@
   <widget class="QGroupBox" name="groupBox">
    <property name="geometry">
     <rect>
-     <x>160</x>
+     <x>0</x>
      <y>650</y>
-     <width>411</width>
-     <height>251</height>
+     <width>361</width>
+     <height>201</height>
     </rect>
    </property>
    <property name="title">
@@ -363,14 +363,14 @@
   <widget class="QGroupBox" name="groupBox_2">
    <property name="geometry">
     <rect>
-     <x>620</x>
-     <y>650</y>
+     <x>380</x>
+     <y>680</y>
      <width>281</width>
      <height>191</height>
     </rect>
    </property>
    <property name="title">
-    <string>开房模块</string>
+    <string>开房</string>
    </property>
    <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
@@ -543,6 +543,103 @@
    <property name="text">
     <string>报表</string>
    </property>
+  </widget>
+  <widget class="QGroupBox" name="groupBox_3">
+   <property name="geometry">
+    <rect>
+     <x>660</x>
+     <y>680</y>
+     <width>281</width>
+     <height>191</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>退房</string>
+   </property>
+   <widget class="QWidget" name="layoutWidget_2">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>30</y>
+      <width>261</width>
+      <height>121</height>
+     </rect>
+    </property>
+    <layout class="QVBoxLayout" name="verticalLayout_3">
+     <property name="spacing">
+      <number>15</number>
+     </property>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_9">
+       <item>
+        <widget class="QLabel" name="label_6">
+         <property name="text">
+          <string>房间号：</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="closeroom_roomId_lEdit">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>150</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>150</width>
+           <height>30</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_11">
+       <item>
+        <spacer name="horizontalSpacer_4">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QDialogButtonBox" name="closeroom_btnbox">
+         <property name="minimumSize">
+          <size>
+           <width>200</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>200</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="standardButtons">
+          <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </widget>
   </widget>
  </widget>
  <resources/>

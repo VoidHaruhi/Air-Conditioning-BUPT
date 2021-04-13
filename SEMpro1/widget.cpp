@@ -22,6 +22,13 @@ void Widget::IniWidget(){
     IniOpenroom();
     IniCost();
 }
+void Widget::IniCloseroom()
+{
+//    ui->closeroom_tartemp_lEdit->clear();
+    ui->closeroom_roomId_lEdit->clear();
+    ui->closeroom_roomId_lEdit->setPlaceholderText("请输入房间号");
+//    ui->closeroom_tartemp_lEdit->setPlaceholderText("请输入目标温度");
+}
 void Widget::IniOpenroom()
 {
     ui->openroom_tartemp_lEdit->clear();
@@ -389,17 +396,31 @@ void Widget::controlRoom(QString roomId,QString temp,QString power,QString wind)
     json[HANDLER] = "/manager/controlRoom";
     json[TOKEN] = token;
     QJsonObject data;
-    if(roomId!="all")data[ROOMID] = roomId.toInt();
-    else data[ROOMID] = roomId;
-    data[TARTEMP] = temp.toInt();
-    if(power!="-1")data[POWER] = power;
-    else data[POWER] = power.toInt();
+    /*if(roomId!="all")data[ROOMID] = roomId.toInt();
+    else*/ data[ROOMID] = roomId;
+    data[TARTEMP] = temp.toDouble();
+
+    /*if(power!="-1")data[POWER] = power;
+    else*/ data[POWER] = power.toInt();
     data[WIND] = wind.toInt();
     json[DATA] = data;
     auto jsonString = QString(QJsonDocument(json).toJson());
     client->sendTextMessage(jsonString);
 }
 
+
+void Widget::closeRoom(QString roomId)
+{
+    QJsonObject json;
+    json[REFID] = generate_refId();
+    json[HANDLER] = "/manager/closeRoom";
+    json[TOKEN] = token;
+    QJsonObject data;
+    data[ROOMID] = roomId;
+    json[DATA] = data;
+    auto jsonString = QString(QJsonDocument(json).toJson());
+    client->sendTextMessage(jsonString);
+}
 void Widget::openRoom(QString roomId,QString temp)
 {
     QJsonObject json;
@@ -407,8 +428,8 @@ void Widget::openRoom(QString roomId,QString temp)
     json[HANDLER] = "/manager/openRoom";
     json[TOKEN] = token;
     QJsonObject data;
-    data[ROOMID] = roomId.toInt();
-    data[DEFAULTMP] = temp.toInt();
+    data[ROOMID] = roomId/*.toInt()*/;
+    data[DEFAULTMP] = temp.toDouble();
     json[DATA] = data;
     auto jsonString = QString(QJsonDocument(json).toJson());
     client->sendTextMessage(jsonString);
@@ -420,8 +441,8 @@ void Widget::seeRoomInfo(QString roomId)
     json[HANDLER] = "/manager/seeRoomInfo";
     json[TOKEN] = token;
     QJsonObject data;
-    if(roomId!="All")data[ROOMID] = roomId.toInt();
-    else data[ROOMID] = roomId;
+    /*if(roomId!="All")data[ROOMID] = roomId.toInt();
+    else*/ data[ROOMID] = roomId;
     json[DATA] = data;
     auto jsonString = QString(QJsonDocument(json).toJson());
     client->sendTextMessage(jsonString);
@@ -491,8 +512,8 @@ void Widget::on_ctrlroom_btnbox_accepted()
     bool isPowerchanged = true;
     if(ui->checkBox_3->isChecked())
     {
-        if(ui->ctrlroom_poweron_rbtn->isChecked())power = "on";
-        else if(ui->ctrlroom_poweroff_rbtn->isChecked())power = "off";
+        if(ui->ctrlroom_poweron_rbtn->isChecked())power = "1";
+        else if(ui->ctrlroom_poweroff_rbtn->isChecked())power = "0";
     }
     else isPowerchanged = false;
     QString wind = QString::number(ui->ctrlroom_wind_sb->value());
@@ -511,21 +532,21 @@ void Widget::on_openroom_btnbox_accepted()
 {
     QString id = ui->openroom_roomId_lEdit->text();
     QString temp = ui->openroom_tartemp_lEdit->text();
-    QRegExp rx("^\\d\\d$");
+//    QRegExp rx("^\\d\\d$");
 
-    if(rx.indexIn(temp)!=0)
-    {
-        QMessageBox::information(this, "提示", "请输入正确的温度");
-        IniOpenroom();
-        return;
-    }
-    QRegExp rx1("^\\d\\d*$");
-    if(rx1.indexIn(id)!=0)
-    {
-        QMessageBox::information(this, "提示", "请输入正确的房间号");
-        IniOpenroom();
-        return;
-    }
+//    if(rx.indexIn(temp)!=0)
+//    {
+//        QMessageBox::information(this, "提示", "请输入正确的温度");
+//        IniOpenroom();
+//        return;
+//    }
+//    QRegExp rx1("^\\d\\d*$");
+//    if(rx1.indexIn(id)!=0)
+//    {
+//        QMessageBox::information(this, "提示", "请输入正确的房间号");
+//        IniOpenroom();
+//        return;
+//    }
     if(!id.isEmpty() && !temp.isEmpty())
         openRoom(id,temp);
     else{
@@ -570,4 +591,36 @@ void Widget::on_report_btn_clicked()
 {
     getReport();
     IniCost();
+}
+
+void Widget::on_closeroom_btnbox_accepted()
+{
+    QString id = ui->closeroom_roomId_lEdit->text();
+//    QString temp = ui->closeroom_tartemp_lEdit->text();
+//    QRegExp rx("^\\d\\d$");
+
+//    if(rx.indexIn(temp)!=0)
+//    {
+//        QMessageBox::information(this, "提示", "请输入正确的温度");
+//        IniOpenroom();
+//        return;
+//    }
+//    QRegExp rx1("^\\d\\d*$");
+//    if(rx1.indexIn(id)!=0)
+//    {
+//        QMessageBox::information(this, "提示", "请输入正确的房间号");
+//        IniOpenroom();
+//        return;
+//    }
+    if(!id.isEmpty())
+        closeRoom(id);
+    else{
+        QMessageBox::information(this, "提示", "请输入房间号与温度");
+    }
+    IniCloseroom();
+}
+
+void Widget::on_closeroom_btnbox_rejected()
+{
+    IniCloseroom();
 }

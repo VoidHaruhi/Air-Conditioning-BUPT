@@ -40,8 +40,8 @@ using namespace std;
 #define TARTEMP "tmp"
 #define POWER "power"
 #define PASSWORD "password"
-#define SRVERADDR "127.0.0.1"
-#define SRVERPORT "12345"
+#define SRVERADDR "10.128.248.29"
+#define SRVERPORT "7777"
 #define LEN_ROOMINFO 6
 #define LEN_ROOMLIST 2
 #define LEN_DETAILCOST 6

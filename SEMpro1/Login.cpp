@@ -107,7 +107,7 @@ void Login::recv_msg(const QString& msg)
                         QJsonObject data  = json[DATA].toObject();
                         QString role = data[ROLE].toString();
                         QString token = data[TOKEN].toString();
-                        if(role == "manager")
+                        if(role == "manager"||role == "admin")
                         {
                             QMessageBox::information(this, "提示", "登陆成功！");
                             Widget *si = new Widget(token,nullptr,1);
