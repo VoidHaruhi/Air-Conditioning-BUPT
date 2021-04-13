@@ -1,4 +1,4 @@
-#ifndef WEBSOCKETCLIENT_H
+﻿#ifndef WEBSOCKETCLIENT_H
 #define WEBSOCKETCLIENT_H
 
 #include <QWidget>
@@ -8,7 +8,7 @@ namespace Ui {
 class WebSocketClient;
 }
 
-//客户端
+//客户端*/
 class WebSocketClient : public QWidget
 {
     Q_OBJECT

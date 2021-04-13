@@ -22,7 +22,6 @@ SOURCES += \
         db.cpp \
         main.cpp \
         mainwindow.cpp \
-        parse.cpp \
         superUser.cpp
 
 # Default rules for deployment.
@@ -36,7 +35,6 @@ HEADERS += \
     airCondition.h \
     db.h \
     mainwindow.h \
-    parse.h \
     superUser.h
 
 FORMS += \
