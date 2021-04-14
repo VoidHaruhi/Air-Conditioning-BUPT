@@ -19,5 +19,5 @@
 #define MESSAGE "msg"
 
 #define SERVER_ERROR "/server/error"
-#define SERVER_CONFIRM "server/confirm"
+#define SERVER_CONFIRM "/server/confirm"
 #endif // HEADERS_H

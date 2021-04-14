@@ -24,14 +24,14 @@ AirCondition::~AirCondition()
 {
 }
 
-void AirCondition::initial(QString id, int tmp)
+void AirCondition::initial(QString id, double tmp)
 {
     idle=true;
     roomId = id;
     initTmp = tmp;
 }
 
-void AirCondition::open(QString systemToken,int tmp){
+void AirCondition::open(QString systemToken,double tmp){
     token=systemToken;
     current_time = QTime::currentTime();
     openTime = current_time.hour() * 60 + current_time.minute();
