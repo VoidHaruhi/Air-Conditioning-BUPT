@@ -8,14 +8,14 @@ QString SERPORT = "";
 int main(int argc, char *argv[])
 {
 
-    setAddr();
+//    setAddr();
     QApplication a(argc, argv);
     Login w;
 
 
     w.show();
-//    Widget w1("101");
-//    w1.show();
+    Widget w1("101");
+    w1.show();
     return a.exec();
 
 
