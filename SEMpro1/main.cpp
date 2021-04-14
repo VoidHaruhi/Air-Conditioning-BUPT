@@ -14,8 +14,8 @@ int main(int argc, char *argv[])
 
 
     w.show();
-    Widget w1("101");
-    w1.show();
+//    Widget w1("101");
+//    w1.show();
     return a.exec();
 
 
