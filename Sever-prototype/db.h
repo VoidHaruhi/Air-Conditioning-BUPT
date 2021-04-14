@@ -17,7 +17,7 @@ public:
     // 创建6个表格*/
     void initial();
     // 查询语句，根据mode确定查询模式：对应6个表*/
-    QSqlQuery querySelect(QString q, int mode);
+    QSqlQuery querySelect(QString q);
     // 插入语句，向表中插入数据*/
     void queryInsert(QString q);
     void queryUpdate(QString q);

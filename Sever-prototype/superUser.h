@@ -1,8 +1,6 @@
 ﻿#ifndef SUPERUSER_H
 #define SUPERUSER_H
 #include<QString>
-#define ADMINISTRATOR 1
-#define MANAGER       0
 
 class SuperUser
 {

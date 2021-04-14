@@ -36,7 +36,8 @@ Database::~Database()
 void Database::initial()
 {
     // 房间固定信息表  主键—>roomId*/
-    QString createSql = "CREATE TABLE room_info (roomId varchar(50) primary key, token varchar(50), defaultTmp int, createTime int);";
+    QString createSql = "CREATE TABLE room_info "
+                        "(roomId varchar(50) primary key, token varchar(50), defaultTmp double, initTmp double, createTime int);";
     if(!query.exec(createSql)){
         qDebug() << "Error in create table room_info." << query.lastError();
     }
@@ -60,7 +61,7 @@ void Database::initial()
         qDebug() << "Table usr_pwd create !";
     }
     // 房间状态表  主键->(roomId, beginTime)*/
-    createSql = "CREATE TABLE room_status (roomId varchar(50), speed int, tmp int, nowTmp int, beginTime int, endTime int);";
+    createSql = "CREATE TABLE room_status (roomId varchar(50), speed int, tmp double, nowTmp double, time int,money double);";
     if(!query.exec(createSql)){
         qDebug() << "Error in create table room_status." << query.lastError();
     }
@@ -68,7 +69,7 @@ void Database::initial()
         qDebug() << "Table room_status create !";
     }
     // 详细计费表 主键->(roomId, time)*/
-    createSql = "CREATE TABLE detailed_money (roomId varchar(50), token varchar(50), time int, money float);";
+    createSql = "CREATE TABLE detailed_money (roomId varchar(50), token varchar(50), time int, money double);";
     if(!query.exec(createSql)){
         qDebug() << "Error in create table detailed_money." << query.lastError();
     }
@@ -76,7 +77,7 @@ void Database::initial()
         qDebug() << "Table detailed_money create !";
     }
     // 总费用表 主键->roomId*/
-    createSql = "CREATE TABLE total_money (roomId varchar(50), token varchar(50), totalMoney float);";
+    createSql = "CREATE TABLE total_money (roomId varchar(50), token varchar(50), totalMoney double);";
     if(!query.exec(createSql)){
         qDebug() << "Error in create table total_money." << query.lastError();
     }
@@ -129,7 +130,7 @@ void Database::queryDropAll()
     queryDrop("DROP TABLE total_money;");
 }
 
-QSqlQuery Database::querySelect(QString q, int mode)
+QSqlQuery Database::querySelect(QString q)
 {
     QSqlQuery query;
     query.exec(q);

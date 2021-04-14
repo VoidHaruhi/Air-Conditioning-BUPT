@@ -19,6 +19,7 @@ SOURCES += \
         WebSocketClient.cpp \
         WebSocketServer.cpp \
         airCondition.cpp \
+        arguments.cpp \
         db.cpp \
         main.cpp \
         mainwindow.cpp \
@@ -33,7 +34,9 @@ HEADERS += \
     WebSocketClient.h \
     WebSocketServer.h \
     airCondition.h \
+    arguments.h \
     db.h \
+    headers.h \
     mainwindow.h \
     superUser.h
 
@@ -41,3 +44,6 @@ FORMS += \
     WebSocketClient.ui \
     WebSocketServer.ui \
     mainwindow.ui
+
+RESOURCES += \
+    config.qrc
