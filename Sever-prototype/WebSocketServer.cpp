@@ -1,5 +1,6 @@
 ﻿#include "WebSocketServer.h"
 #include "ui_WebSocketServer.h"
+#include "arguments.h"
 #include <QFile>
 #include <QString>
 #include <QDebug>
@@ -10,7 +11,7 @@
 #include <QJsonDocument>
 #include <QCryptographicHash>
 #include <QRandomGenerator64>
-#include <time.h>
+#include <QTime>
 
 WebSocketServer::WebSocketServer(QWidget *parent):
     QWidget(parent),
@@ -22,45 +23,15 @@ WebSocketServer::WebSocketServer(QWidget *parent):
     QHostAddress address=QHostAddress::Any;
 
     int port;
-    /*
-    QFile file("D:\yuyue\University\SoftwareEngineering\Air-Conditioning-BUPT\build-prototype-Desktop_Qt_5_12_9_MSVC2017_64bit-Debug\debug\config.json");
-    if ( !file.open( QIODevice::ReadWrite ) ) {
-        qDebug() << "文件打开失败!\n";
-        exit(1);
-    }
-    qDebug() << "文件打开成功\n";
-    QJsonParseError parseJsonErr;
-    QJsonDocument document = QJsonDocument::fromJson(file.readAll(), &parseJsonErr);
-    if(!(parseJsonErr.error==QJsonParseError::NoError)){
-        qDebug()<<"Port parse error";
-        exit(1);
-    }else{
-        QJsonObject j=document.object();
-        if(j.contains("port")){
-            port=j["port"].toInt();
-        }
-    }*/
     port=12345;
     if(!server->listen(address,port)){
         qDebug()<<"Listen error";
     }else{
         qDebug()<<"Listening";
     }
-
     connect(server,&QWebSocketServer::newConnection,this,&WebSocketServer::onNewConnection);
     connect(this,&WebSocketServer::process,this,&WebSocketServer::packageAnalyse);
-    SuperUser lyh;
-    lyh.username="1";
-    lyh.password="1";
-    lyh.role="manager";
-    superUsers.append(lyh);
-//    AirCondition air;
-//    air.idle=false;
-//    air.wind=1;
-//    air.setTmp=28;
-//    air.defaultTmp=25;
-//    air.roomId=304;
-//    airConditioners.append(air);
+    loadSuperUsers();
 }
 WebSocketServer::~WebSocketServer(){
     clearClient();
@@ -91,7 +62,6 @@ void WebSocketServer::onNewConnection(){
 
             qDebug() <<"[New Package] From Address: " + connectAddress + "  Port: " + QString::number(connectPort) + " :";
             qDebug() << msg << endl;
-
             // 进行包的解析*/
             QByteArray recvPackage = msg.toUtf8();
             QJsonParseError parseJsonErr;
@@ -101,12 +71,10 @@ void WebSocketServer::onNewConnection(){
                 qDebug()<<"解析json文件错误.";
                 return;
             }
-            packageAnalyse(socket,document.object());
-            //emit process(socket,document.object());
+            //packageAnalyse(socket,document.object());
+            emit process(socket,document.object());
 
     });
-    //发送消息*/
-    //connect(this,&WebSocketServer::sendMessage,socket,&QWebSocket::sendTextMessage);
     //断开连接，释放*/
     connect(socket,&QWebSocket::disconnected,[this,socket](){
         clientList.removeAll(socket);
@@ -114,22 +82,32 @@ void WebSocketServer::onNewConnection(){
     });
 }
 QString WebSocketServer::generateToken(){
-    QString salt=QTime::currentTime().toString("zzz")+QString(QRandomGenerator::global()->bounded(100000));
+    QString salt=QTime::currentTime().toString("zzz")+QString("%1").arg(QRandomGenerator::global()->bounded(10000000));
     QString token=QCryptographicHash::hash(salt.toLatin1(),QCryptographicHash::Md5).toHex();
     qDebug()<<"Token generated"<<token<<salt;
     return token;
 }
-bool WebSocketServer::checkToken(QString token, QString role){
+QString WebSocketServer::generateMD5(QString str){
+    return QCryptographicHash::hash(str.toLatin1(),QCryptographicHash::Md5).toHex();
+}
+bool WebSocketServer::checkToken(QWebSocket *sock,QJsonObject recvJson, QString role){
+    QString token=getToken(recvJson);
+    bool flag=true;
+    QJsonObject ret;
     if(tokenMap.count(token)==0){
         qDebug()<<"Wrong token "<<token << role;
-        return false;
+        GEN_ERROR(ret,WRONG_TOKEN);
+        flag=false;
     }else if(tokenMap[token]!=role){
         qDebug()<<"Wrong role "<<token << role;
-        return false;
+        GEN_ERROR(ret,WRONG_ROLE);
+        flag=false;
     }
-    return true;
+    if(!flag)
+        SEND_MESSAGE(sock,ret);
+    return flag;
 }
-int WebSocketServer::findRoom(int roomId){
+int WebSocketServer::findRoom(QString roomId){
     int len=airConditioners.length();
     for(int i=0;i<len;i++){
         if(airConditioners[i].roomId==roomId){
@@ -138,9 +116,58 @@ int WebSocketServer::findRoom(int roomId){
     }
     return -1;
 }
+QString WebSocketServer::getRefId(QJsonObject j){
+    if(!j.contains(REFID)){
+        qDebug()<<"NO field refId";
+        return NULLSTRING;
+    }
+    return j[REFID].toString();
+}
+QString WebSocketServer::getToken(QJsonObject j){
+    if(!j.contains("token")){
+        qDebug()<<"No field token";
+        return "null";
+    }
+    return j["token"].toString();
+}
+QString WebSocketServer::getRoomId(QJsonObject j){
+    if(!j.contains("data")){
+        qDebug()<<"No data field";
+        return NULLSTRING;
+    }
+    QJsonObject jd=j["data"].toObject();
+    if(!jd.contains(ROOM_ID)){
+        qDebug()<<"No field roomId";
+        return NULLSTRING;
+    }
+    return jd[ROOM_ID].toString();
+}
+int WebSocketServer::getCurrentTime(){
+    QTime time=QTime::currentTime();
+    return time.hour()*60+time.minute();
+}
+
+void WebSocketServer::loadSuperUsers(){
+    QFile file(":superuser/users.txt");
+          if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+          {
+              qDebug()<<"Open file error!";
+              return;
+            }
+          while (!file.atEnd()) {
+//              QByteArray line = file.readLine();
+              QString line = file.readLine();
+              QStringList list = line.split(" ");
+              SuperUser newuser;
+              newuser.username=list[0];
+              newuser.password=generateMD5(list[1]);
+              newuser.role=list[2];
+              superUsers.append(newuser);
+    }
+}
 void WebSocketServer::packageAnalyse(QWebSocket *socket, QJsonObject recvJson)
 {
-    QStringList request = recvJson["handler"].toString().split('/');
+    QStringList request = recvJson[HANDLER].toString().split('/');
     QJsonObject answer;
     qDebug()<<request;
     if (request[1]=="manager"){//管理员发来消息*/
@@ -160,13 +187,11 @@ void WebSocketServer::packageAnalyse(QWebSocket *socket, QJsonObject recvJson)
     }else if(request[1]=="client"){
         if(request[2]=="init"){
             initRoom(socket,recvJson);
-        }else if(request[2]=="open"){
-            openAc(socket,recvJson);
-        }else if(request[2]=="set"){
-            setAc(socket,recvJson);
-        }else if(request[2]=="updataStatus"){
+        }else if(request[2]=="controlRoom"){
+            controlAc(socket,recvJson);
+        }else if(request[2]=="updateStatus"){
             updateAc(socket,recvJson);
-        }else if(request[2]=="confirm"){
+        }else if(request[2]==CONFIRM){
 
         }else{
             qDebug()<<"request error";
@@ -178,38 +203,38 @@ void WebSocketServer::packageAnalyse(QWebSocket *socket, QJsonObject recvJson)
 }
 void WebSocketServer::controlRoom(QWebSocket *socket, QJsonObject recvJson){
     QJsonObject ret;
-    QString token=recvJson["token"].toString();
-    if(!checkToken(token,"manager")){
+    QString token=recvJson[TOKEN].toString();
+    if(!checkToken(socket,recvJson,"manager")){
         qDebug()<<"Wrong token";
         GEN_ERROR(ret,WRONG_TOKEN);
         SEND_MESSAGE(socket,ret);
         return;
     }
-    if(!recvJson.contains("data")){
+    if(!recvJson.contains(DATA)){
         qDebug()<<"Error in controlRoom: No data field!";
         return;
     }
-    QJsonObject data=recvJson["data"].toObject();
+    QJsonObject data=recvJson[DATA].toObject();
     //回复管理员ACK*/
-    ret.insert("refId",recvJson["refId"].toString());
-    ret.insert("handler","/server/confirm");
+    ret.insert(REFID,getRefId(recvJson));
+    ret.insert(HANDLER,SERVER_CONFIRM);
     SEND_MESSAGE(socket,ret);
     //再向房间发送改变命令*/
     QJsonObject req;
-    req.insert("refId",recvJson["refId"].toString());
-    req.insert("handler","/server/setRoom");
+    req.insert(REFID,getRefId(recvJson));
+    req.insert(HANDLER,"/server/setRoom");
     QJsonObject dataRet;
-    dataRet.insert("token",token);
-    dataRet.insert("defaultTmp",data["defaultTmp"].toInt());
-    req.insert("data",dataRet);
-    QWebSocket *socketR=sockMap[data["roomId"].toInt()];
+    dataRet.insert(TOKEN,token);
+    dataRet.insert(DEFAULT_TMP,data[DEFAULT_TMP].toInt());
+    req.insert(DATA,dataRet);
+    QWebSocket *socketR=sockMap[getRoomId(recvJson)];
     SEND_MESSAGE(socketR,req);
 }
 void WebSocketServer::login(QWebSocket *socket, QJsonObject recvJson){
 
     QJsonObject ret;
-    ret.insert("refId",recvJson["refId"].toString());
-    QJsonObject data=recvJson["data"].toObject();
+    ret.insert(REFID,getRefId(recvJson));
+    QJsonObject data=recvJson[DATA].toObject();
     //检验*/
     bool check=false;
     int len=superUsers.length();
@@ -222,11 +247,11 @@ void WebSocketServer::login(QWebSocket *socket, QJsonObject recvJson){
         }
     }
     if(!check){
-       ret.insert("handler","/server/error");
-       ret.insert("msg","wrong password");
+        ret.insert(HANDLER,SERVER_ERROR);
+        ret.insert("msg","wrong password");
     }else{
         QString role=target->role;
-        ret.insert("handler","/server/retRole");
+        ret.insert(HANDLER,"/server/retRole");
         QJsonObject dataRet;
         dataRet.insert("role",role);
         QString token=generateToken();
@@ -236,55 +261,60 @@ void WebSocketServer::login(QWebSocket *socket, QJsonObject recvJson){
         //持久化*/
 
 
-        dataRet.insert("token",token);
-        ret.insert("data",dataRet);
+        dataRet.insert(TOKEN,token);
+        ret.insert(DATA,dataRet);
         QString a;
     }
     SEND_MESSAGE(socket,ret);
 }
+void WebSocketServer::logout(QWebSocket *socket, QJsonObject recvJson){
+    //检查token
+    if(!checkToken(socket,recvJson,MANAGER))
+        return;
+    QString token=getToken(recvJson);
+    QJsonObject ret;
+    ret.insert(HANDLER,SERVER_CONFIRM);
+    ret.insert(REFID,getRefId(recvJson));
+    SEND_MESSAGE(socket,ret);
+    //删除对应token
+    tokenMap.erase(token);
+}
 void WebSocketServer::getRoomList(QWebSocket *socket, QJsonObject recvJson){
     QJsonObject ret;
-    ret.insert("refId",recvJson["refId"].toString());
-    QJsonObject data=recvJson["data"].toObject();
-    QString token=recvJson["token"].toString();
+    ret.insert(REFID,getRefId(recvJson));
+    QJsonObject data=recvJson[DATA].toObject();
     //检查token
-    if(!checkToken(token,"manager")&&!checkToken(token,"admin")){
-        GEN_ERROR(ret,WRONG_TOKEN);
-        SEND_MESSAGE(socket,ret);
+    if(!checkToken(socket,recvJson,MANAGER))
         return;
-    }
     //返回*/
-    ret.insert("handler","/server/retRoomList");
+    ret.insert(HANDLER,"/server/retRoomList");
     QJsonArray roomList;
     //查询*/
     int len=airConditioners.length();
     for(int i=0;i<len;i++){
         QJsonObject room;
-        room.insert("roomId",airConditioners[i].roomId);
+        room.insert(ROOM_ID,airConditioners[i].roomId);
         room.insert("idle",airConditioners[i].idle);
         roomList.append(room);
     }
     QJsonObject dataRet;
     dataRet.insert("roomList",roomList);
-    ret.insert("data",dataRet);
-
+    ret.insert(DATA,dataRet);
     SEND_MESSAGE(socket,ret);
 }
 void WebSocketServer::openRoom(QWebSocket *socket, QJsonObject recvJson){
     QJsonObject ret;
-    ret.insert("refId",recvJson["refId"].toString());
-    if(!checkToken(recvJson["token"].toString(),"manager")){
-        GEN_ERROR(ret,WRONG_TOKEN);
-        SEND_MESSAGE(socket,ret);
+    ret.insert(REFID,getRefId(recvJson));
+    //检查token
+    if(!checkToken(socket,recvJson,MANAGER))
         return;
-    }
     //为房间生成token*/
     QString token=generateToken();
     //存储*/
-    QJsonObject data=recvJson["data"].toObject();
+    QJsonObject data=recvJson[DATA].toObject();
     //持久化*/
-    int id=data["roomId"].toInt();
-    int defaultTmp=data["defaultTmp"].toInt();
+    QString id=getRoomId(recvJson);
+    double defaultTmp=data[DEFAULT_TMP].toDouble();
     int check=findRoom(id);
     if(check==-1){
         qDebug()<<"Wrong id";
@@ -294,52 +324,48 @@ void WebSocketServer::openRoom(QWebSocket *socket, QJsonObject recvJson){
     }
     airConditioners[check].open(token,defaultTmp);
     // ***** 将roomId和token加入映射表*/
-    tokenMap[token]=data["roomId"].toString();
+    tokenMap[token]=QString("%1").arg(getRoomId(recvJson));
     // *****
-    ret.insert("handler","/server/confirm");
+    ret.insert(HANDLER,SERVER_CONFIRM);
     SEND_MESSAGE(socket,ret);
     QJsonObject req;
-    req.insert("refId",recvJson["refId"].toString());
-    req.insert("handler","/server/openRoom");
+    req.insert(REFID,getRefId(recvJson));
+    req.insert(HANDLER,"/server/openRoom");
     QJsonObject dataReq;
-    dataReq.insert("defaultTmp",defaultTmp);
-    dataReq.insert("token",token);
-    req.insert("data",dataReq);
+    dataReq.insert(DEFAULT_TMP,defaultTmp);
+    dataReq.insert(TOKEN,token);
+    req.insert(DATA,dataReq);
     QWebSocket *socketR=sockMap[id];
     SEND_MESSAGE(socketR,req);
 
     // 更新房间固定信息表*/
-    db.queryUpdate("UPDATE room_info set defaultTmp="+QString(defaultTmp)+
-                  " ,token= '"+token+"' WHERE roomId="+QString(id));
+    db.queryUpdate("UPDATE room_info set defaultTmp="+QString("%1").arg(defaultTmp)+
+                  " ,token= '"+token+"' WHERE roomId="+QString("%1").arg(id));
 //    QString q = "INSERT INTO room_info valus(";
-//    q += QString(id)+token+QString(defaultTmp)+QString(ac->openTime)+");";
+//    q += QString("%1").arg(id)+token+QString("%1").arg(defaultTmp)+QString("%1").arg(ac->openTime)+");";
 //    db.queryInsert(q);
-
-    //等待回复？
 }
 QJsonObject WebSocketServer::roomInfoJson(AirCondition target){
     QJsonObject room;
-    room.insert("roomId",target.roomId);
+    room.insert(ROOM_ID,target.roomId);
     room.insert("power",int(target.power));
-    room.insert("setTmp",int(target.setTmp));
-    room.insert("nowTmp",int(target.nowTmp));
+    room.insert("setTmp",double(target.setTmp));
+    room.insert("nowTmp",double(target.nowTmp));
     room.insert("wind",target.wind);
     return room;
 }
 void WebSocketServer::seeRoomInfo(QWebSocket *socket, QJsonObject recvJson){
     QJsonObject ret;
-    ret.insert("refId",recvJson["refId"].toString());
-    if(!checkToken(recvJson["token"].toString(),"manager")){
-        GEN_ERROR(ret,WRONG_TOKEN);
-        SEND_MESSAGE(socket,ret);
+    ret.insert(REFID,getRefId(recvJson));
+    //检查token
+    if(!checkToken(socket,recvJson,MANAGER))
         return;
-    }
-    ret.insert("handler","/server/roomInfo");
+    ret.insert(HANDLER,"/server/roomInfo");
     QJsonObject dataRet;
-    QJsonObject data=recvJson["data"].toObject();
+    QJsonObject data=recvJson[DATA].toObject();
     QJsonArray rooms;
     int len=airConditioners.length();
-    if(data["roomId"].toString()=="All"){
+    if(data[ROOM_ID].toString()=="All"){
         for(int i=0;i<len;i++){
             if(airConditioners[i].idle==false){
                 QJsonObject room=roomInfoJson(airConditioners[i]);
@@ -347,7 +373,7 @@ void WebSocketServer::seeRoomInfo(QWebSocket *socket, QJsonObject recvJson){
             }
         }
     }else{
-        int id=data["roomId"].toInt();
+        QString id=getRoomId(recvJson);
         for(int i=0;i<len;i++){
             if(airConditioners[i].roomId==id){
                 //数据库查询*/
@@ -360,31 +386,65 @@ void WebSocketServer::seeRoomInfo(QWebSocket *socket, QJsonObject recvJson){
 
     }
     dataRet.insert("roomInfoList",rooms);
-    ret.insert("data",dataRet);
+    ret.insert(DATA,dataRet);
     SEND_MESSAGE(socket,ret);
+}
+void WebSocketServer::simpleCost(QWebSocket *socket, QJsonObject recvJson){
+    QJsonObject ret;
+    ret[REFID]=recvJson[REFID];
+    QString token=recvJson[TOKEN].toString();
+    //检查token
+    if(!checkToken(socket,recvJson,MANAGER))
+        return;
+    ret.insert(HANDLER,"/server/retSimpleCost");
+    QJsonObject dataRet;
+    QJsonObject data=recvJson[DATA].toObject();
+    QString id=getRoomId(recvJson);
+    QSqlQuery res=db.querySelect(QString("SELECT totalMoney from total_money WHERE roomId='%1'").arg(id));
+    double money;
+    while(!res.next()){
+        money=res.value(0).toDouble();
+    }
+    dataRet.insert("totalFee",money);
+    dataRet.insert(ROOM_ID,id);
+    res=db.querySelect(QString("SELECT createTime from room_info WHERE roomId='%1'").arg(id));
+    int checkinTime;
+    while(!res.next()){
+        checkinTime=res.value(0).toInt();
+    }
+    dataRet.insert("checkinTime",checkinTime);
+    int checkoutTime=getCurrentTime();
+    dataRet.insert("checkoutTime",checkoutTime);
+    ret.insert(DATA,dataRet);
+    SEND_MESSAGE(socket,ret);
+}
+
+void WebSocketServer::detailCost(QWebSocket *socket, QJsonObject recvJson){
+    QJsonObject ret;
+    ret[REFID]=recvJson[REFID];
+    //检查token
+    if(!checkToken(socket,recvJson,MANAGER))
+        return;
+    ret.insert(HANDLER,"/server/retDetailCost");
+    QJsonObject data=recvJson[DATA].toObject();
+    QString id=getRoomId(recvJson);
+    QJsonObject dataRet;
+    dataRet.insert(ROOM_ID,id);
+    QJsonArray list;
+
+
 }
 
 void WebSocketServer::initRoom(QWebSocket *socket, QJsonObject recvJson)
 {
     QJsonObject ret;
-    ret.insert("refId",recvJson["refId"].toString());
+    ret.insert(REFID,getRefId(recvJson));
     // 解析data*/
-    QJsonObject data=recvJson["data"].toObject();
-    int roomId=data["roomId"].toInt();
-    int initTmp=data["initTmp"].toInt();
-    // 查询该房间是否存在*/
-    AirCondition *ac;
-    int len=airConditioners.length();
-    bool check=false;
-    for(int i=0;i<len;i++){
-        if(airConditioners[i].roomId==roomId){
-            ac=&(airConditioners[i]);
-            check=true;
-            break;
-        }
-    }
+    QJsonObject data=recvJson[DATA].toObject();
+    QString roomId=getRoomId(recvJson);
+    double initTmp=data["initTmp"].toDouble();
     // 该房间不存在*/
-    if(!check){
+    if(airConditioners.length()==0||!findRoom(roomId)){
         AirCondition acTmp;
         acTmp.initial(roomId, initTmp);
         //test
@@ -393,164 +453,109 @@ void WebSocketServer::initRoom(QWebSocket *socket, QJsonObject recvJson)
         tokenMap[token]=QString("%1").arg(acTmp.roomId);
         // 将空调加入列表*/
         airConditioners.append(acTmp);
-        qDebug()<<"Room:"<<roomId<<" is connected,"<<"initTmp is "<<initTmp;
+        qDebug()<<"Room:"<<QString("%1").arg(roomId)
+               <<" is connected, initTmp is "<<QString("%1").arg(initTmp);
         // 加入sockMap
         sockMap[roomId] = socket;
         // 回复消息*/
-        ret.insert("handler","/server/confirm");
+        ret.insert(HANDLER,SERVER_CONFIRM);
         SEND_MESSAGE(socket,ret);
-        // 更新房间客户端信息表*/
-//        QString q = "INSERT INTO ip_info values(";
-//        QString ip = socket->peerAddress().toString();
-//        q += "'"+ip +"'"+",'room',"+"'"+QString(roomId)+"'"+");";
-//        db.queryInsert(q);
-
+        //更新room_info表
+        QString q=QString("INSERT INTO room_info values(%1,'%2',%3,%4,%5)")
+                .arg(roomId)
+                .arg(token)
+                .arg(-1)
+                .arg(initTmp)
+                .arg(acTmp.openTime);
+        db.queryInsert(q);
+        // 更新ip_info表*/
+        q = QString("INSERT INTO ip_info values('%1','room',%2);")
+                .arg(socket->peerAddress().toString()
+                     .arg(roomId));
+        db.queryInsert(q);
     }
     else{   // 回复错误信息*/
-        qDebug()<<"Room:"<<roomId<<" is already exist.";
-        ret.insert("handler","/server/error");
-        ret.insert("msg","room already exists");
+        qDebug()<<"Room:"<<QString("%1").arg(roomId)<<" is already exist.";
+        ret.insert(HANDLER,SERVER_ERROR);
+        ret.insert(MESSAGE,"room already exists");
         SEND_MESSAGE(socket,ret);
     }
 }
 
-void WebSocketServer::setAc(QWebSocket *socket, QJsonObject recvJson)
+void WebSocketServer::controlAc(QWebSocket *socket, QJsonObject recvJson)
 {
     QJsonObject ret;
-    ret.insert("refId",recvJson["refId"].toString());
-    QString token = recvJson["token"].toString();
+    ret.insert(REFID,getRefId(recvJson));
+    QString token = recvJson[TOKEN].toString();
     // 判断该token是否存在*/
-    int id;
-    if(tokenMap.count(token)>0){
-        id = tokenMap[token].toInt();
-    }
-    else{
-        ret.insert("handler","/server/error");
-        ret.insert("token",token);
-        ret.insert("msg","token not exists");
-        SEND_MESSAGE(socket,ret);
+    QString id=getRoomId(recvJson);
+    //检查token*/
+    if(!checkToken(socket,recvJson,MANAGER))
         return;
-    }
     // 找到该房间对应的空调*/
-    AirCondition *ac;
-    int len=airConditioners.length();
-    bool check=false;
-    for(int i=0;i<len;i++){
-        if(airConditioners[i].roomId==id){
-            ac=&(airConditioners[i]);
-            check=true;
-            break;
+    int idx=findRoom(id);
+    if(idx>=0){
+        QJsonObject data=recvJson[DATA].toObject();
+        double tmp = data["tmp"].toDouble();
+        int wind = data["wind"].toInt();
+        int power = data["power"].toInt();
+        AirCondition *ac=&(airConditioners[idx]);
+        if(tmp>=0){
+            ac->setTmp=tmp;
         }
-    }
-    if(check){
-        double tmp = recvJson["data"].toObject()["tmp"].toDouble();
-        int wind = recvJson["data"].toObject()["wind"].toInt();
-        ac->set(tmp, wind);
-        ret.insert("handler","/server/confirm");
-        ret.insert("token",token);
+        if(wind!=-1){
+            ac->wind=wind;
+        }
+        if(power!=-1){
+            ac->power=power;
+        }
+        ret.insert(HANDLER,SERVER_CONFIRM);
+        SEND_MESSAGE(socket,ret);
+        /*持久化*/
+        if(tmp>=0){
+
+        }
+        if(wind!=-1){
+
+        }
+        if(power!=-1){
+
+        }
+    }else{
+        GEN_ERROR(ret,WRONG_ROOMID);
         SEND_MESSAGE(socket,ret);
     }
 
-}
-
-void WebSocketServer::openAc(QWebSocket *socket, QJsonObject recvJson)
-{
-    QJsonObject ret;
-    ret.insert("refId",recvJson["refId"].toString());
-    QString token = recvJson["token"].toString();
-    // 判断该token是否存在*/
-    int id;
-    if(tokenMap.count(token)>0){
-        id = tokenMap[token].toInt();
-    }
-    else{
-        ret.insert("handler","/server/error");
-        ret.insert("token",token);
-        ret.insert("msg","token not exists");
-        SEND_MESSAGE(socket,ret);
-        return;
-    }
-    // 找到该房间对应的空调*/
-    AirCondition *ac;
-    int len=airConditioners.length();
-    bool check=false;
-    for(int i=0;i<len;i++){
-        if(airConditioners[i].roomId==id){
-            ac=&(airConditioners[i]);
-            check=true;
-            break;
-        }
-    }
-    if(check){
-        int power = recvJson["data"].toObject()["power"].toInt();
-        if(power==0){
-            ac->update();
-            ac->close();
-        }
-        else{
-            ac->start();
-        }
-        ret.insert("handler","/server/confirm");
-        ret.insert("token",token);
-        SEND_MESSAGE(socket,ret);
-        // 更新数据库*/
-        if(power==0){
-//            QString q = "INSERT INTO detailed_money values (";
-//            q += QString(ac->roomId)+","+token+","+QString(ac->lastUpdateTime)+","+QString("%1").arg(ac->totalFee) + ");";
-//            db.queryInsert(q);
-        }
-    }
 }
 
 void WebSocketServer::updateAc(QWebSocket *socket, QJsonObject recvJson)
 {
     QJsonObject ret;
-    ret.insert("refId",recvJson["refId"].toString());
-    QString token = recvJson["token"].toString();
+    ret.insert(REFID,getRefId(recvJson));
+    QString token = recvJson[TOKEN].toString();
     // 判断该token是否存在*/
-    int id;
-    if(tokenMap.count(token)>0){
-        id = tokenMap[token].toInt();
-    }
-    else{
-        ret.insert("handler","/server/error");
-        ret.insert("token",token);
-        ret.insert("msg","token not exists");
-        SEND_MESSAGE(socket,ret);
+    QString id=getRoomId(recvJson);
+    //检查token
+    if(!checkToken(socket,recvJson,MANAGER))
         return;
-    }
     // 找到该房间对应的空调*/
-    AirCondition *ac;
-    int len=airConditioners.length();
-    bool check=false;
-    for(int i=0;i<len;i++){
-        if(airConditioners[i].roomId==id){
-            ac=&(airConditioners[i]);
-            check=true;
-            break;
-        }
-    }
-    if(check){
-        double nowTmp = recvJson["data"].toObject()["nowTmp"].toDouble();
-        int beginTime = ac->lastUpdateTime;
+    int idx=findRoom(id);
+    if(idx>=0){
+        AirCondition *ac=&(airConditioners[idx]);
+        double nowTmp = recvJson[DATA].toObject()["nowTmp"].toDouble();
         ac->nowTmp = nowTmp;
-        ac->update();
+        //更新总费用
+        double newFee=ac->update();
         // 构造报文*/
-        ret.insert("handler","/server/confirm");
-        ret.insert("token",token);
+        ret.insert(HANDLER,"/server/updateMoney");
+        ret.insert(TOKEN,token);
         QJsonObject data;
         data.insert("totalFee",ac->totalFee);
-        ret.insert("data",data);
+        ret.insert(DATA,data);
         SEND_MESSAGE(socket,ret);
-
+        /*持久化*/
         // 更新详细消费表*/
-//        QString q = "INSERT INTO detailed_money values (";
-//        q += QString(ac->roomId)+","+token+","+QString(ac->lastUpdateTime)+","+QString("%1").arg(ac->totalFee) + ");";
-//        db.queryInsert(q);
-//        // 更新房间状态表*/
-//        q = "INSERT INTO room_status values (";
-//        q += QString(ac->roomId)+","+QString(ac->wind)+","+QString("%1").arg(ac->nowTmp)+",";
-//        q += QString(beginTime)+","+QString(ac->lastUpdateTime)+");";
-//        db.queryInsert(q);
+        // 更新房间状态表*/
     }
 }
+

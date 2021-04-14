@@ -12,15 +12,13 @@
 #include "airCondition.h"
 #include "superUser.h"
 #include "db.h"
+#include "headers.h"
 
 #define SEND_MESSAGE(sock,jsn) {QString _msg=QString(QJsonDocument(jsn).toJson());\
     if(sock->sendTextMessage(_msg)!=_msg.length())\
     {qDebug()<<"Send Error!";}\
     qDebug()<<_msg;}
-#define WRONG_TOKEN "wrong token"
-#define WRONG_ROOMID "wrong roomId"
-#define GEN_ERROR(ret,tok) {ret.insert("handler","/server/error");ret.insert("msg",tok);}
-using string=std::string;
+#define GEN_ERROR(ret,tok) {ret.insert("handler",SERVER_ERROR);ret.insert("msg",tok);}
 namespace Ui {
 class WebSocketServer;
 }
@@ -31,21 +29,29 @@ public:
     ~WebSocketServer();
     //功能*/
     static QString generateToken();
-    bool checkToken(QString token,QString role);
+    bool checkToken(QWebSocket *sock,QJsonObject recvJson, QString role);
+    static QString generateMD5(QString str);
     QJsonObject roomInfoJson(AirCondition target);
-    int findRoom(int roomId);
-    int findSuperUser(QString user,QString pwd);
+    int findRoom(QString roomId);//找房间
+    QString getRefId(QJsonObject j);
+    static QString getRoomId(QJsonObject j);
+    static QString getToken(QJsonObject j);
+    static int getCurrentTime();//单位为秒
+
+    void loadSuperUsers();
     //接口*/
     void controlRoom(QWebSocket *socket, QJsonObject recvJson);
     void login(QWebSocket *socket, QJsonObject recvJson);
+    void logout(QWebSocket *socket, QJsonObject recvJson);
     void getRoomList(QWebSocket *socket, QJsonObject recvJson);
     void openRoom(QWebSocket *socket,QJsonObject recvJson);
     void seeRoomInfo(QWebSocket *socket,QJsonObject recvJson);
-
+    void simpleCost(QWebSocket *socket,QJsonObject recvJson);
+    void detailCost(QWebSocket *socket,QJsonObject recvJson);
+    void requestReport(QWebSocket *socket,QJsonObject recvJson);
 
     void initRoom(QWebSocket *socket,QJsonObject recvJson);
-    void setAc(QWebSocket *socket,QJsonObject recvJson);
-    void openAc(QWebSocket *socket,QJsonObject recvJson);
+    void controlAc(QWebSocket *socket,QJsonObject recvJson);
     void updateAc(QWebSocket *socket,QJsonObject recvJson);
 signals:
     void sendMessage(const QString &text);
@@ -62,7 +68,7 @@ private:
     Database db;
 
     /*roodId和房间websocket的字典，用于转发*/
-    std::map<int,QWebSocket*> sockMap;
+    std::map<QString,QWebSocket*> sockMap;
     /*role:管理员为manager，经理为admin，房间为房间号*/
     std::map<QString,QString> tokenMap;
     QList<AirCondition> airConditioners;/*空调列表*/

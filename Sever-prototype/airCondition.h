@@ -12,34 +12,39 @@ class AirCondition
 {
 public:
     int power;
-    int roomId;
+    QString roomId;
     QString token;
     int wind;
+
     double nowTmp;
     double setTmp;/*// 目标温度*/
+    double defaultTmp;
+    double initTmp;//环境温度
+
     double totalFee;
 
+    //所有时间单位均为分钟
     QTime current_time;
     int runTime;    /*// 目前没用上*/
-    int openTime;
+    int openTime;/**/
     int startTime;
-    int defaultTmp;
-    int lastUpdateTime;
-    bool idle;/*//无人入住为True*/
+    int lastUpdateTime;//上次接收风速改变的时间
+
+    bool idle;/*无人入住为True*/
 
     AirCondition();
     ~AirCondition();
 
     // initial是客户端连接但未开房时进行的操作*/
-    void initial(int id, int tmp);
+    void initial(QString id, double tmp);
     // open是开房操作，收到管理员开房通知后的操作*/
-    void open(QString systemToken,int tmp);
+    void open(QString systemToken,double tmp);
     // 空调开机*/
     void start();
     // 这里只是接收客户端请求后，更新空调的目标温度和风速*/
-    void set(int tmp, int spd);
+    void set(double tmp, int spd);
     // 随着服务器时间更新当前温度和累计消费*/
-    void update();
+    double update();
     // 空调关机*/
     void close();
 
