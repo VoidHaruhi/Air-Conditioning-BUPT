@@ -54,7 +54,7 @@ void Login::Iniconnect()
 void Login::sendloginpak(QString name,QString pass)
 {
 //    name = QString::fromStdString(MD5(name.toStdString()).toString());
-//    pass = QString::fromStdString(MD5(pass.toStdString()).toString());
+    pass = QString::fromStdString(MD5(pass.toStdString()).toString());
     QJsonObject json;
     refid = generate_refId();
     json[REFID] = refid;

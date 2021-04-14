@@ -64,7 +64,7 @@ void Widget::dealRoomlist(QJsonObject json)
      ui->Tablewidget->clear();
     while(iteratorJson != list.end()){
         QJsonObject room = iteratorJson->toObject();
-        info<<QString::number(room[ROOMID].toInt())<<QString::number(room[ISIDLE].toBool());
+        info<<room[ROOMID].toString()<<QString::number(room[ISIDLE].toBool());
 //        qDebug()<<room[ROOMID]<<room[ISIDLE];
         cnt++;
         iteratorJson++;
@@ -161,7 +161,7 @@ void Widget::dealRoomInfo(QJsonObject json)
      ui->Tablewidget->clear();
     while(iteratorJson != list.end()){
         QJsonObject room = iteratorJson->toObject();
-        info<<QString::number(room[ROOMID].toInt())<<QString::number(room[POWER].toInt())<<QString::number(room[TARTEMP].toInt())<<\
+        info<<room[ROOMID].toString()<<QString::number(room[POWER].toInt())<<QString::number(room[TARTEMP].toInt())<<\
               QString::number(room[NOWTEMP].toInt())<<QString::number(room[WIND].toInt());
 //        qDebug()<<room[ROOMID]<<room[ISIDLE];
         cnt++;
@@ -201,7 +201,7 @@ void Widget::dealRoomInfo(QJsonObject json)
 }
 void Widget::dealsimFee(QJsonObject json){
      QStringList info = {};
-     info<<QString::number(json[ROOMID].toInt())<<QString::number(json["totalFee"].toDouble(), 'f', 1)<<QString::number(json["checkinTime"].toInt())<<\
+     info<<json[ROOMID].toString()<<QString::number(json["totalFee"].toDouble(), 'f', 1)<<QString::number(json["checkinTime"].toInt())<<\
            QString::number(json["checkoutTime"].toInt());
     int data_len = LEN_SIMCOST;
      ui->Tablewidget->clear();
@@ -239,7 +239,7 @@ void Widget::dealReport(QJsonObject json){
      ui->Tablewidget->clear();
     while(iteratorJson != list.end()){
         QJsonObject room = iteratorJson->toObject();
-        info<<QString::number(room[ROOMID].toInt())<<QString::number(room["powerCost"].toDouble(),'f',1)<<QString::number(room["moneyCost"].toDouble(),'f',1);
+        info<<room[ROOMID].toString()<<QString::number(room["powerCost"].toDouble(),'f',1)<<QString::number(room["moneyCost"].toDouble(),'f',1);
 //        qDebug()<<room[ROOMID]<<room[ISIDLE];
         cnt++;
         iteratorJson++;
