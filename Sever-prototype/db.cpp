@@ -134,6 +134,12 @@ QSqlQuery Database::querySelect(QString q)
 {
     QSqlQuery query;
     query.exec(q);
+    if(!query.exec(q)){
+        qDebug() << "Error in SELECT for: " << q << query.lastError();
+    }
+    else{
+        qDebug() << "SELECT succeed for " << q;
+    }
     return query;
 }
 void Database::queryUpdate(QString q){

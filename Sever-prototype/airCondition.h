@@ -32,6 +32,7 @@ public:
     int lastUpdateTime;//上次接收风速改变的时间
 
     bool idle;/*无人入住为True*/
+    bool isStart;
 
     AirCondition();
     ~AirCondition();

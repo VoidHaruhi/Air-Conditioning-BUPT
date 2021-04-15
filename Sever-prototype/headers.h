@@ -19,6 +19,8 @@
 #define CONFIRM "confirm"
 #define MESSAGE "msg"
 
+#define ONE_MINUTE 10
+
 #define SERVER_ERROR "/server/error"
 #define SERVER_CONFIRM "/server/confirm"
 #endif // HEADERS_H

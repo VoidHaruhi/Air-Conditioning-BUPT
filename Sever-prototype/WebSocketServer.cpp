@@ -33,9 +33,10 @@ WebSocketServer::WebSocketServer(QWidget *parent):
     }
     //timer
     QTimer *timer=new QTimer(this);
-    timer->setInterval(60*1000);
+    timer->setInterval(60*1000/ONE_MINUTE);
     timer->start();
     connect(timer,&QTimer::timeout,this,&WebSocketServer::updateCostInfo);
+
     connect(server,&QWebSocketServer::newConnection,this,&WebSocketServer::onNewConnection);
     connect(this,&WebSocketServer::process,this,&WebSocketServer::packageAnalyse);
     loadSuperUsers();
@@ -170,8 +171,8 @@ QJsonArray WebSocketServer::getCostListOfRoom(QString id){
         return ret;
     }
     QSqlQuery res=db.querySelect(QString("SELECT time,nowTmp,setTmp,wind,money FROM room_status WHERE roomId='%1'"
-                                 "ORDERED BY time ASEC").arg(id));
-    while(!res.next()){
+                                 "ORDER BY time ASC;").arg(id));
+    while(res.next()){
         QJsonObject row;
         row.insert("time",res.value(0).toInt());
         row.insert("nowTmp",res.value(1).toDouble());
@@ -179,6 +180,7 @@ QJsonArray WebSocketServer::getCostListOfRoom(QString id){
         row.insert("wind",res.value(3).toInt());
         row.insert("money",res.value(4).toDouble());
         ret.append(row);
+
     }
     return ret;
 }
@@ -188,11 +190,15 @@ void WebSocketServer::updateCostInfo(){
     int i;
     for(i=0;i<airConditioners.length();i++){
         AirCondition *ac=&(airConditioners[i]);
-        double fee=ac->totalFee+ac->getNewFee()-ac->lastFee;
-        ac->lastFee=ac->totalFee+ac->getNewFee();
-        db.queryInsert(QString("INSERT INTO room_status(roomId,time,nowTmp,setTmp,wind,money) "
-                       "VALUES ('%1',%2,%3,%4,%5,%6)")
-                       .arg(ac->roomId).arg(cnt).arg(ac->nowTmp).arg(ac->setTmp).arg(fee).arg(ac->wind));
+        if(ac->isStart){
+            double fee=ac->totalFee+ac->getNewFee()-ac->lastFee;
+            qDebug()<<"Fee: "<<fee;
+            ac->lastFee=ac->totalFee+ac->getNewFee();
+            db.queryInsert(QString("INSERT INTO room_status(roomId,time,nowTmp,setTmp,wind,money) "
+                           "VALUES ('%1',%2,%3,%4,%5,%6)")
+                           .arg(ac->roomId).arg(cnt).arg(ac->nowTmp).arg(ac->setTmp).arg(ac->wind).arg(fee));
+        }
+
     }
     cnt++;
     qDebug()<<"Costs of rooms are updated";
@@ -200,7 +206,7 @@ void WebSocketServer::updateCostInfo(){
 
 int WebSocketServer::getCurrentTime(){
     QTime time=QTime::currentTime();
-    return time.hour()*60+time.minute();
+    return (time.hour() * 3600 + time.minute()*60 + time.second())/ONE_MINUTE;
 }
 
 void WebSocketServer::loadSuperUsers(){
@@ -271,7 +277,13 @@ void WebSocketServer::controlRoom(QWebSocket *socket, QJsonObject recvJson){
         qDebug()<<"Error in controlRoom: No data field!";
         return;
     }
-    QJsonObject data=recvJson[DATA].toObject();
+    QJsonObject data=recvJson["data"].toObject();
+    if(data["wind"]!=-1){
+        QString id=data["roomId"].toString();
+        int idx=findRoom(id);
+        AirCondition *ac=&(airConditioners[idx]);
+        ac->update();
+    }
     //回复管理员ACK*/
     ret.insert(REFID,getRefId(recvJson));
     ret.insert(HANDLER,SERVER_CONFIRM);
@@ -561,6 +573,9 @@ void WebSocketServer::controlAc(QWebSocket *socket, QJsonObject recvJson)
             ac->wind=wind;
         }
         if(power!=-1){
+            if(ac->power==0){
+                ac->start();
+            }
             ac->power=power;
         }
         ret.insert(HANDLER,SERVER_CONFIRM);
