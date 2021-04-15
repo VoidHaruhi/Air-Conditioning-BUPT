@@ -1,5 +1,5 @@
 ﻿#include "airCondition.h"
-
+#include "headers.h"
 AirCondition::AirCondition()
 {
     power=0;
@@ -8,7 +8,7 @@ AirCondition::AirCondition()
     nowTmp = 25;
     defaultTmp=25;
     initTmp=25;//环境温度
-    wind = 0;
+    wind = 1;
     setTmp = 25;
     totalFee = lastFee = 0;
     current_time = QTime::currentTime();
@@ -17,6 +17,7 @@ AirCondition::AirCondition()
     startTime = -1;
     lastUpdateTime = -1;
     idle=true;
+    isStart=false;
 
 }
 
@@ -34,7 +35,8 @@ void AirCondition::initial(QString id, double tmp)
 void AirCondition::open(QString systemToken,double tmp){
     token=systemToken;
     current_time = QTime::currentTime();
-    openTime=lastUpdateTime= current_time.hour() * 60 + current_time.minute();
+    openTime= (current_time.hour() * 3600 + current_time.minute()*60 + current_time.second())/ONE_MINUTE;
+    lastUpdateTime=openTime;
     defaultTmp=tmp;
     idle=false;
 
@@ -43,7 +45,9 @@ void AirCondition::open(QString systemToken,double tmp){
 void AirCondition::start()
 {
     power=1;
-    startTime = current_time.hour() * 60 + current_time.minute();
+    isStart=true;
+    current_time = QTime::currentTime();
+    startTime = (current_time.hour() * 3600 + current_time.minute()*60 + current_time.second())/ONE_MINUTE;
     lastUpdateTime = startTime;
     // starttime也要设置一下*/
 }
@@ -56,14 +60,15 @@ void AirCondition::set(double tmp, int spd)
     wind = spd;
 }
 double AirCondition::getNewFee(){
-    int nowTime = current_time.hour() * 60 + current_time.minute();
+    current_time = QTime::currentTime();
+    int nowTime = (current_time.hour() * 3600 + current_time.minute()*60 + current_time.second())/ONE_MINUTE;
     int interval = nowTime - lastUpdateTime;
     double fee;
     if(wind == 1){
-        fee = (double)interval / 3;
+        fee = (double)interval / 3.0;
     }
     else if(wind == 2){
-        fee = (double)interval / 2;
+        fee = (double)interval / 2.0;
     }
     else if(wind == 3){
         fee = (double)interval;
@@ -75,7 +80,8 @@ double AirCondition::getNewFee(){
 double AirCondition::update()
 {
     // 更新当前累计消费*/
-    int nowTime = current_time.hour() * 60 + current_time.minute();
+    current_time = QTime::currentTime();
+    int nowTime = (current_time.hour() * 3600 + current_time.minute()*60 + current_time.second())/ONE_MINUTE;
     double fee=getNewFee();
     totalFee+=fee;
     lastUpdateTime = nowTime;
