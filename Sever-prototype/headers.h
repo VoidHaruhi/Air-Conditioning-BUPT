@@ -14,6 +14,7 @@
 #define DEFAULT_TMP "defaultTmp"
 #define MANAGER "manager"//管理员
 #define ADMIN "admin"
+#define ROOM "room"
 #define ROOM_ID "roomId"
 #define CONFIRM "confirm"
 #define MESSAGE "msg"

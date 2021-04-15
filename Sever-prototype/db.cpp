@@ -60,8 +60,8 @@ void Database::initial()
     else{
         qDebug() << "Table usr_pwd create !";
     }
-    // 房间状态表  主键->(roomId, beginTime)*/
-    createSql = "CREATE TABLE room_status (roomId varchar(50), speed int, tmp double, nowTmp double, time int,money double);";
+    // 房间状态表  主键->(roomId, time)*/
+    createSql = "CREATE TABLE room_status (roomId varchar(50),time int, nowTmp double, setTmp double, wind int,money double);";
     if(!query.exec(createSql)){
         qDebug() << "Error in create table room_status." << query.lastError();
     }

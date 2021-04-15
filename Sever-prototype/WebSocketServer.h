@@ -37,8 +37,13 @@ public:
     static QString getRoomId(QJsonObject j);
     static QString getToken(QJsonObject j);
     static int getCurrentTime();//单位为秒
-
+    double getCostOfRoom(QString id);
+    QJsonArray getCostListOfRoom(QString id);
     void loadSuperUsers();
+
+    //定时
+    void updateCostInfo();
+
     //接口*/
     void controlRoom(QWebSocket *socket, QJsonObject recvJson);
     void login(QWebSocket *socket, QJsonObject recvJson);

@@ -12,6 +12,8 @@
 #include <QCryptographicHash>
 #include <QRandomGenerator64>
 #include <QTime>
+#include <QTimer>
+#include <QTimerEvent>
 
 WebSocketServer::WebSocketServer(QWidget *parent):
     QWidget(parent),
@@ -29,6 +31,11 @@ WebSocketServer::WebSocketServer(QWidget *parent):
     }else{
         qDebug()<<"Listening";
     }
+    //timer
+    QTimer *timer=new QTimer(this);
+    timer->setInterval(60*1000);
+    timer->start();
+    connect(timer,&QTimer::timeout,this,&WebSocketServer::updateCostInfo);
     connect(server,&QWebSocketServer::newConnection,this,&WebSocketServer::onNewConnection);
     connect(this,&WebSocketServer::process,this,&WebSocketServer::packageAnalyse);
     loadSuperUsers();
@@ -123,6 +130,7 @@ QString WebSocketServer::getRefId(QJsonObject j){
     }
     return j[REFID].toString();
 }
+
 QString WebSocketServer::getToken(QJsonObject j){
     if(!j.contains("token")){
         qDebug()<<"No field token";
@@ -130,6 +138,7 @@ QString WebSocketServer::getToken(QJsonObject j){
     }
     return j["token"].toString();
 }
+
 QString WebSocketServer::getRoomId(QJsonObject j){
     if(!j.contains("data")){
         qDebug()<<"No data field";
@@ -142,6 +151,53 @@ QString WebSocketServer::getRoomId(QJsonObject j){
     }
     return jd[ROOM_ID].toString();
 }
+
+double WebSocketServer::getCostOfRoom(QString id){
+    int idx=findRoom(id);
+    if(idx==-1){
+        qDebug()<<"No room found";
+        return -1;
+    }
+    AirCondition *ac=&(airConditioners[idx]);
+    return ac->totalFee+ac->getNewFee();
+}
+
+QJsonArray WebSocketServer::getCostListOfRoom(QString id){
+    QJsonArray ret;
+    int idx=findRoom(id);
+    if(idx==-1){
+        qDebug()<<"No room found";
+        return ret;
+    }
+    QSqlQuery res=db.querySelect(QString("SELECT time,nowTmp,setTmp,wind,money FROM room_status WHERE roomId='%1'"
+                                 "ORDERED BY time ASEC").arg(id));
+    while(!res.next()){
+        QJsonObject row;
+        row.insert("time",res.value(0).toInt());
+        row.insert("nowTmp",res.value(1).toDouble());
+        row.insert("setTmp",res.value(2).toDouble());
+        row.insert("wind",res.value(3).toInt());
+        row.insert("money",res.value(4).toDouble());
+        ret.append(row);
+    }
+    return ret;
+}
+
+void WebSocketServer::updateCostInfo(){
+    static int cnt=0;
+    int i;
+    for(i=0;i<airConditioners.length();i++){
+        AirCondition *ac=&(airConditioners[i]);
+        double fee=ac->totalFee+ac->getNewFee()-ac->lastFee;
+        ac->lastFee=ac->totalFee+ac->getNewFee();
+        db.queryInsert(QString("INSERT INTO room_status(roomId,time,nowTmp,setTmp,wind,money) "
+                       "VALUES ('%1',%2,%3,%4,%5,%6)")
+                       .arg(ac->roomId).arg(cnt).arg(ac->nowTmp).arg(ac->setTmp).arg(fee).arg(ac->wind));
+    }
+    cnt++;
+    qDebug()<<"Costs of rooms are updated";
+}
+
 int WebSocketServer::getCurrentTime(){
     QTime time=QTime::currentTime();
     return time.hour()*60+time.minute();
@@ -181,6 +237,10 @@ void WebSocketServer::packageAnalyse(QWebSocket *socket, QJsonObject recvJson)
             seeRoomInfo(socket,recvJson);
         }else if(request[2]=="openRoom"){
             openRoom(socket,recvJson);
+        }else if(request[2]=="simpleCost"){
+            simpleCost(socket,recvJson);
+        }else if(request[2]=="detailCost"){
+            detailCost(socket,recvJson);
         }else{
             qDebug()<<"request error";
         }
@@ -205,9 +265,6 @@ void WebSocketServer::controlRoom(QWebSocket *socket, QJsonObject recvJson){
     QJsonObject ret;
     QString token=recvJson[TOKEN].toString();
     if(!checkToken(socket,recvJson,"manager")){
-        qDebug()<<"Wrong token";
-        GEN_ERROR(ret,WRONG_TOKEN);
-        SEND_MESSAGE(socket,ret);
         return;
     }
     if(!recvJson.contains(DATA)){
@@ -223,10 +280,7 @@ void WebSocketServer::controlRoom(QWebSocket *socket, QJsonObject recvJson){
     QJsonObject req;
     req.insert(REFID,getRefId(recvJson));
     req.insert(HANDLER,"/server/setRoom");
-    QJsonObject dataRet;
-    dataRet.insert(TOKEN,token);
-    dataRet.insert(DEFAULT_TMP,data[DEFAULT_TMP].toInt());
-    req.insert(DATA,dataRet);
+    req.insert(DATA,recvJson["data"]);
     QWebSocket *socketR=sockMap[getRoomId(recvJson)];
     SEND_MESSAGE(socketR,req);
 }
@@ -324,7 +378,7 @@ void WebSocketServer::openRoom(QWebSocket *socket, QJsonObject recvJson){
     }
     airConditioners[check].open(token,defaultTmp);
     // ***** 将roomId和token加入映射表*/
-    tokenMap[token]=QString("%1").arg(getRoomId(recvJson));
+    tokenMap[token]="room";
     // *****
     ret.insert(HANDLER,SERVER_CONFIRM);
     SEND_MESSAGE(socket,ret);
@@ -340,10 +394,7 @@ void WebSocketServer::openRoom(QWebSocket *socket, QJsonObject recvJson){
 
     // 更新房间固定信息表*/
     db.queryUpdate("UPDATE room_info set defaultTmp="+QString("%1").arg(defaultTmp)+
-                  " ,token= '"+token+"' WHERE roomId="+QString("%1").arg(id));
-//    QString q = "INSERT INTO room_info valus(";
-//    q += QString("%1").arg(id)+token+QString("%1").arg(defaultTmp)+QString("%1").arg(ac->openTime)+");";
-//    db.queryInsert(q);
+                  " ,token= '"+token+"' WHERE roomId='"+id+"'");
 }
 QJsonObject WebSocketServer::roomInfoJson(AirCondition target){
     QJsonObject room;
@@ -351,7 +402,8 @@ QJsonObject WebSocketServer::roomInfoJson(AirCondition target){
     room.insert("power",int(target.power));
     room.insert("setTmp",double(target.setTmp));
     room.insert("nowTmp",double(target.nowTmp));
-    room.insert("wind",target.wind);
+    room.insert("wind",int(target.wind));
+    room.insert("fee",double(target.totalFee+target.getNewFee()));
     return room;
 }
 void WebSocketServer::seeRoomInfo(QWebSocket *socket, QJsonObject recvJson){
@@ -400,18 +452,17 @@ void WebSocketServer::simpleCost(QWebSocket *socket, QJsonObject recvJson){
     QJsonObject dataRet;
     QJsonObject data=recvJson[DATA].toObject();
     QString id=getRoomId(recvJson);
-    QSqlQuery res=db.querySelect(QString("SELECT totalMoney from total_money WHERE roomId='%1'").arg(id));
-    double money;
-    while(!res.next()){
-        money=res.value(0).toDouble();
+    int idx=findRoom(id);
+    if(idx<0){
+        GEN_ERROR(ret,WRONG_ROOMID);
+        SEND_MESSAGE(socket,ret);
+        return;
     }
+    AirCondition *ac=&(airConditioners[idx]);
+    double money=ac->totalFee+ac->getNewFee();
     dataRet.insert("totalFee",money);
     dataRet.insert(ROOM_ID,id);
-    res=db.querySelect(QString("SELECT createTime from room_info WHERE roomId='%1'").arg(id));
-    int checkinTime;
-    while(!res.next()){
-        checkinTime=res.value(0).toInt();
-    }
+    int checkinTime=ac->openTime;
     dataRet.insert("checkinTime",checkinTime);
     int checkoutTime=getCurrentTime();
     dataRet.insert("checkoutTime",checkoutTime);
@@ -430,9 +481,9 @@ void WebSocketServer::detailCost(QWebSocket *socket, QJsonObject recvJson){
     QString id=getRoomId(recvJson);
     QJsonObject dataRet;
     dataRet.insert(ROOM_ID,id);
-    QJsonArray list;
-
-
+    dataRet.insert("costList",getCostListOfRoom(id));
+    ret.insert("data",dataRet);
+    SEND_MESSAGE(socket,ret);
 }
 
 void WebSocketServer::initRoom(QWebSocket *socket, QJsonObject recvJson)
@@ -461,7 +512,7 @@ void WebSocketServer::initRoom(QWebSocket *socket, QJsonObject recvJson)
         ret.insert(HANDLER,SERVER_CONFIRM);
         SEND_MESSAGE(socket,ret);
         //更新room_info表
-        QString q=QString("INSERT INTO room_info values(%1,'%2',%3,%4,%5)")
+        QString q=QString("INSERT INTO room_info values('%1','%2',%3,%4,%5)")
                 .arg(roomId)
                 .arg(token)
                 .arg(-1)
@@ -490,8 +541,10 @@ void WebSocketServer::controlAc(QWebSocket *socket, QJsonObject recvJson)
     // 判断该token是否存在*/
     QString id=getRoomId(recvJson);
     //检查token*/
-    if(!checkToken(socket,recvJson,MANAGER))
+    if(!checkToken(socket,recvJson,ROOM)){
         return;
+    }
+
     // 找到该房间对应的空调*/
     int idx=findRoom(id);
     if(idx>=0){
@@ -503,7 +556,8 @@ void WebSocketServer::controlAc(QWebSocket *socket, QJsonObject recvJson)
         if(tmp>=0){
             ac->setTmp=tmp;
         }
-        if(wind!=-1){
+        if(wind!=-1){//只有风速改变需要更新总费用*/
+            ac->update();
             ac->wind=wind;
         }
         if(power!=-1){
@@ -511,16 +565,6 @@ void WebSocketServer::controlAc(QWebSocket *socket, QJsonObject recvJson)
         }
         ret.insert(HANDLER,SERVER_CONFIRM);
         SEND_MESSAGE(socket,ret);
-        /*持久化*/
-        if(tmp>=0){
-
-        }
-        if(wind!=-1){
-
-        }
-        if(power!=-1){
-
-        }
     }else{
         GEN_ERROR(ret,WRONG_ROOMID);
         SEND_MESSAGE(socket,ret);
@@ -536,7 +580,7 @@ void WebSocketServer::updateAc(QWebSocket *socket, QJsonObject recvJson)
     // 判断该token是否存在*/
     QString id=getRoomId(recvJson);
     //检查token
-    if(!checkToken(socket,recvJson,MANAGER))
+    if(!checkToken(socket,recvJson,ROOM))
         return;
     // 找到该房间对应的空调*/
     int idx=findRoom(id);
@@ -544,13 +588,12 @@ void WebSocketServer::updateAc(QWebSocket *socket, QJsonObject recvJson)
         AirCondition *ac=&(airConditioners[idx]);
         double nowTmp = recvJson[DATA].toObject()["nowTmp"].toDouble();
         ac->nowTmp = nowTmp;
-        //更新总费用
-        double newFee=ac->update();
+
         // 构造报文*/
         ret.insert(HANDLER,"/server/updateMoney");
         ret.insert(TOKEN,token);
         QJsonObject data;
-        data.insert("totalFee",ac->totalFee);
+        data.insert("totalFee",ac->totalFee+ac->getNewFee());
         ret.insert(DATA,data);
         SEND_MESSAGE(socket,ret);
         /*持久化*/

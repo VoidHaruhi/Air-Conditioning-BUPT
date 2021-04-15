@@ -22,6 +22,7 @@ public:
     double initTmp;//环境温度
 
     double totalFee;
+    double lastFee;
 
     //所有时间单位均为分钟
     QTime current_time;
@@ -45,6 +46,8 @@ public:
     void set(double tmp, int spd);
     // 随着服务器时间更新当前温度和累计消费*/
     double update();
+    //新产生的费用
+    double getNewFee();
     // 空调关机*/
     void close();
 
