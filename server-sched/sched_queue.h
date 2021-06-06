@@ -21,6 +21,7 @@ public:
     QueueType remove(QString id);
     void update(QueueType q);
     int getSpeed(QString roomId);
+    bool exists(QString roomId);
 protected:
     QVector<QueueType> roomList;
 };
@@ -37,16 +38,21 @@ public:
     bool modify(QString roomId,int fanSpeed,int waitTime);
     bool change(QString oldId,QString newId,int fanSpeed,int waitTime);
     bool add(QString roomId,int fanSpeed,int waitTime);
+    /* 用来判断是否需要与新服务替换
+     * high:返回"none", low/equal: 返回roomId*/
+    QString compare(int fanSpeed);
 
 private:
     QTimer waitTimer;
 };
 class ServiceQueue:public BasicQueue{
 public:
-    bool exists(QString roomId);
+
     bool modify(QString roomId,int fanSpeed,int startTime);
     bool change(QString oldId,QString newId,int fanSpeed,int startTime);
     bool add(QString roomId,int fanSpeed,int startTime);
+    /* 用来判断是否需要与一个到时间了的等待服务替换
+     * low:返回"none", equal/high: 返回roomId*/
     QString compare(int fanSpeed);
 };
 

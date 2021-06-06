@@ -90,6 +90,26 @@ bool WaitQueue::modify(QString roomId, int fanSpeed, int waitTime){
     return false;
 }
 
+QString WaitQueue::compare(int fanSpeed){
+    QString maxRoom="none";
+    int maxSpeed=fanSpeed,maxTime;
+    QVector<QueueType>::iterator it;
+    for(it=roomList.begin();it!=roomList.end();++it){
+        if(it->fanSpeed>maxSpeed){
+            maxRoom=it->roomId;
+            maxSpeed=it->fanSpeed;
+            maxTime=it->waitTime;
+        }else{
+            if(it->startTime<maxTime){//替换最小的
+                maxRoom=it->roomId;
+                maxSpeed=it->fanSpeed;
+                maxTime=it->waitTime;
+            }
+        }
+    }
+    return maxRoom;
+}
+
 bool WaitQueue::add(QString roomId, int fanSpeed, int waitTime){
     QueueType tmp(roomId,fanSpeed,waitTime,-1);
     roomList.append(tmp);
@@ -121,7 +141,7 @@ bool ServiceQueue::modify(QString roomId, int fanSpeed, int startTime){
     }
     return false;
 }
-bool ServiceQueue::exists(QString roomId){
+bool BasicQueue::exists(QString roomId){
     QVector<QString> res;
     QVector<QueueType>::iterator it;
     for(it=roomList.begin();it!=roomList.end();++it){
@@ -139,7 +159,7 @@ bool ServiceQueue::add(QString roomId, int fanSpeed, int startTime){
 }
 QString ServiceQueue::compare(int fanSpeed){
     QString minRoom="none";
-    int minSpeed=fanSpeed,minTime;
+    int minSpeed=fanSpeed,minTime=3600*24+1;
     QVector<QueueType>::iterator it;
     for(it=roomList.begin();it!=roomList.end();++it){
         if(it->fanSpeed<minSpeed){
@@ -147,7 +167,7 @@ QString ServiceQueue::compare(int fanSpeed){
             minSpeed=it->fanSpeed;
             minTime=it->startTime;
         }else{
-            if(it->startTime<minTime){//替换最小的
+            if(it->fanSpeed==minSpeed&&it->startTime<minTime){//替换最小的
                 minRoom=it->roomId;
                 minSpeed=it->fanSpeed;
                 minTime=it->startTime;
