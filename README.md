@@ -5,4 +5,4 @@ The project of software engineering, BUPT
 
 年份：2021
 
-使用Qt C++ & WebSocket实现前后端，分数不高，仅供参考
+使用Qt C++ & WebSocket实现前后端，分数80+（平时成绩包括文档+代码占40%），仅供参考，以课程要求为准
