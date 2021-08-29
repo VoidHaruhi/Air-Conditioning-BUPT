@@ -1,0 +1,5 @@
+cli:客户端
+recep：前台
+server2：服务器
+manager：管理员
+建库代码在服务器的database.cpp中

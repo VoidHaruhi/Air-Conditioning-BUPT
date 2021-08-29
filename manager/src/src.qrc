@@ -1,0 +1,19 @@
+<RCC>
+    <qresource prefix="/src"/>
+    <qresource prefix="/">
+        <file>Control.png</file>
+        <file>openroom.png</file>
+        <file>report.png</file>
+        <file>power.png</file>
+        <file>supervise.png</file>
+        <file>cold.png</file>
+        <file>heat.png</file>
+        <file>off.png</file>
+        <file>on.png</file>
+        <file>nosup.png</file>
+        <file>manager.png</file>
+        <file>manager_active.png</file>
+        <file>bk.png</file>
+        <file>login.png</file>
+    </qresource>
+</RCC>

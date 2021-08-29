@@ -1,0 +1,26 @@
+<RCC>
+    <qresource prefix="/">
+        <file>pictures/add.png</file>
+        <file>pictures/add2.png</file>
+        <file>pictures/background.jpg</file>
+        <file>pictures/cool.png</file>
+        <file>pictures/hot.png</file>
+        <file>pictures/power_off.png</file>
+        <file>pictures/power_on.png</file>
+        <file>pictures/reduce.png</file>
+        <file>pictures/reduce2.png</file>
+        <file>pictures/title.png</file>
+        <file>pictures/tmpadd.png</file>
+        <file>pictures/tmpreduce.png</file>
+        <file>pictures/windadd.png</file>
+        <file>pictures/windreduce.png</file>
+        <file>pictures/wind1.png</file>
+        <file>pictures/wind2.png</file>
+        <file>pictures/wind0.png</file>
+        <file>pictures/wind3.png</file>
+        <file>pictures/background1.jpg</file>
+        <file>pictures/bg1.png</file>
+        <file>pictures/po1.png</file>
+        <file>pictures/po3.png</file>
+    </qresource>
+</RCC>
