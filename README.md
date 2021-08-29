@@ -1,6 +1,8 @@
 # Air-Conditioning-BUPT
 The project of software engineering, BUPT
 
+北邮软件工程-酒店空调系统
+
 老师：肖丁
 
 年份：2021
