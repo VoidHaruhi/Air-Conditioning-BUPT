@@ -1,4 +1,4 @@
-# Air-Conditioning-BUPT
+# 北京邮电大学软件工程大作业-酒店空调温控系统
 The project of software engineering, BUPT
 
 北邮软件工程-酒店空调系统
